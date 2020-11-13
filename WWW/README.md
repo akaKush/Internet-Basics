@@ -20,6 +20,5 @@ Here you'll find an introduction to protocols & languages used on the World Wide
 
 Feel free to use the these documents as you wish.
 
-Resumee of the theory given at the subject TCGI.
-Imparted by Israel Martín at ETSETB, UPC.
-
+This is a resumee of the theory given at the subject TCGI,
+Imparted by Israel Martín Escalona at ETSETB, UPC.
