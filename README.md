@@ -7,7 +7,6 @@ Here you'll find either theory and practical exercices regarding the Internet Ba
 - Basic Network Applications (SSH, Telnet, FTP...)
 - DNS & DHCP
 - WWW (HTTP & HTTPS, HTML, nginx...)
-- 
 
 
 Feel free to use the these documents as you wish.
