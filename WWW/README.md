@@ -16,6 +16,7 @@ Here you'll find an introduction to protocols & languages used on the World Wide
 - 1.9 HTTP 1.1
 - 1.10 Related RFCs
 - 1.11 Practical HTTP with <b>nginx</b>
+- HTTPS  (Secure HTTP)
 
 
 Feel free to use the these documents as you wish.
