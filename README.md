@@ -1,4 +1,4 @@
-# Internet-Basics
+# Internet Basics
 
 Welcome to an Introduction to the Internet Basics.
 
