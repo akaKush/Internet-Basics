@@ -44,7 +44,7 @@ Per tant un **firewall** el podem entendre com un **controlador d'accés o PEATG
     - Internal Network (Podria ser la xarxa interna d'una empresa) --> Considerada "segura i fiable"
     - External Network (Internet) --> Considerada "insegura"
 
-<img>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/firewall.png"/>
 
 ## Objectius dels Firewalls
 
