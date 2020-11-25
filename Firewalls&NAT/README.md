@@ -27,9 +27,9 @@
 # Firewalls
 ## Introducció
 
-**Què és un Firewall?**<br>
+**Què és un Firewall?**<br><br>
 Els routers distribueixen el tràfic  segons un conjunt de normes que simplement apunten a l'adreça de destí.<br>
-Però i sí necessitem que el tràfic estigui controlat segons uns altres paràmetres?
+Però i sí necessitem que el tràfic estigui controlat segons uns altres paràmetres?<br>
 Exemples:
 - Equipament a la xarxa externa només pot accedir el servidor web públic.
 - El departament de Marketing pot accedir al server privat però no al públic.
@@ -48,6 +48,13 @@ Per tant un **firewall** el podem entendre com un **controlador d'accés o PEATG
 
 ## Objectius dels Firewalls
 
+- **Punt d'estrangulament únic per el tràfic de xarxa.** Tot el tràfic tant entri o surti ha de passar pel firewall.
+  - Escala degudament, i minimitza el risc de nous perills.
+
+- **Normes de control d'accés**. Només el tràfic autoritzat està permès a passar el firewall.
+  - Facilitat l'administració.
+
+- **Seguretat al dispositiu**. El firewall en sí mateix s'assumeix que és immune a penetracions, ha de ser especialment segur.
 
 ## Packet Filtering Firewalls
 
