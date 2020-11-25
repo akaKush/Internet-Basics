@@ -1,6 +1,5 @@
-# Firewalls & Network Address Translation (NAT)
+<h1>Introducció</h1>
 
-- [Firewalls & Network Address Translation (NAT)](#firewalls--network-address-translation-nat)
 - [Firewalls](#firewalls)
 - [NAT](#nat)
 - [Firewalls & NAT in Linux](#firewalls--nat-in-linux)
