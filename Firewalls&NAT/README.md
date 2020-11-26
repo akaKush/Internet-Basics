@@ -147,6 +147,7 @@ Introdueixen el concepte de **Deep Packet Inspection**:
   - Poden detectar documents HTML perjudicials
   - ...
 
+---
 
 # NAT
 ## Raons per utilitzar NAT
@@ -177,15 +178,44 @@ Quan utilitzem NAT, **es realitzen dues traduccions d'adreces**:
 
 ## Utilització de NAT
 
+<h2>MIRAR VIDEOS</h2>
+
 
 ## Tipus de NAT
 
+Tenim **2 tipus principals de NAT**:
+- **Source NAT (SNAT)**:
+  - El router tradueix l'adreça d'origen
+  - La traducció es fa just abans que el paquet surti del router
+  - El mateix router farà l'operació inversa (traducció de l'adreça de destí) just quan els paquets arribin.
+
+- **Destination NAT (DNAT)**:
+  - El router tradueix l'adreça de destí
+  - La traducció es fa abans de l'enrutament, just quan el paquet arriba al router
+  - El router farà l'operació inversa (traducció de l'adreça d'origen) quan els paquets arribin.
 
 ## Conseqüències d'utilitzar NAT
 
+Quan les @IP canviem, hem de tenir en compte algunes consideracions:
+- Els **checksums s'han de tornar a calcular** (inclou els checksums de IP, TCP i UDP)
+- Quan s'utilitza NAT, els paquets de resposta haurien de tornar al mateix router.
+- Per aquesta raó, en la majoria de casos només hi ha un router NAT que controla l'accés a Internet.
 
 ## Problemes i limitacions de NAT
 
+<h3>Problemes i limitacions (I)</h3>
+
+- Quan utilitzem NAT, l'**Internet esdevé una xarxa pseudo-orientada-a-connexió**.
+- El NAT **acaba amb la transparència de les capes de protocol**
+- El NAT **esdevé un router BOTTLENECK**
+  - Ha de manejar les conexions entrants i sortints, el que provoca problemes de CPU i memòria
+  - El número de IP públiques és limitat, per tant això limita el número de possibles conexions externes
+
+
+<h3>Problemes i limitacions (II)</h3>
+
+- Alguns protocols i aplicacions inclouen les @IP als seus HEADERS i DATA fields.
+- Aquestes @IP han d'estar correctament traduides --> **El router ha d'utilitzar** (a part de NAT) **ALG (Application-Level-Gateway)**
 
 ## Exemples
 
