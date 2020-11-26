@@ -185,12 +185,12 @@ Quan utilitzem NAT, **es realitzen dues traduccions d'adreces**:
 
 Tenim **2 tipus principals de NAT**:
 - **Source NAT (SNAT)**:
-  - El router tradueix l'adreça d'origen
+  - El router tradueix l'adreça d'origen (Passa d'una IP privada a una IP pública, perquè des de Internet es pugui reconèixer aquella adreça)
   - La traducció es fa just abans que el paquet surti del router
   - El mateix router farà l'operació inversa (traducció de l'adreça de destí) just quan els paquets arribin.
 
 - **Destination NAT (DNAT)**:
-  - El router tradueix l'adreça de destí
+  - El router tradueix l'adreça de destí (l'adreça de destí normalment és una xarxa privada, per tant primer envia a la IP pública, llavors la tradueix a la privada corresponent i així el paquet pot arribar)
   - La traducció es fa abans de l'enrutament, just quan el paquet arriba al router
   - El router farà l'operació inversa (traducció de l'adreça d'origen) quan els paquets arribin.
 
