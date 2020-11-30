@@ -67,12 +67,18 @@ No s’està fent cap ICMP Relaying, però l’encapsulador fa Soft State.
 
 `host2$ ping −c2 −s 1000 −M want −i 1 172.16.1.3` (Els dos pings separats per un interval d'1 segon, amb la opció **-i 1**)
 
-El ping no arriba a destí. Podem veure tres missatges ICMP en SN0, dos echo-request (Tant un com l’altre amb DF=Set) i
-un missatge de DestinationUnreachable, fragmentation needed (Amb DF= Not Set)
+El ping no arriba a destí. Podem veure tres missatges ICMP en SimNet0, dos echo-request (Tant un com l’altre amb DF=Set) i un missatge de DestinationUnreachable, fragmentation needed (Amb DF = Not Set)
 
-En SN1 podem veure dos missatges ICMP, un echo-request (Amb DF=Set tant en capa inner com outer) i un missatge DU-
-FN (Amb DF= Set tant en capa inner com outer).
+En SimNet1 podem veure dos missatges ICMP, un echo-request (Amb DF=Set tant en capa inner com outer) i un missatge DU-FN (Amb DF = Set tant en capa inner com outer).
 
-Podem veure un missatge de fragmentation-needed a SN0 que té @IPsrc= 192.168.0.1 i @IPdst=192.168.0.2 (De R1 a
+Podem veure un missatge de fragmentation-needed a SimNet0 que té @IPsrc= 192.168.0.1 i @IPdst=192.168.0.2 (De R1 a
 host2). La MTU que notifica és = 976B.
 L’R1 manté el soft state de la MTU del túnel ja que notifica a RC de que es necessita fragmentar.
+
+`host2$ ping -c3 -s 1000 -M want -i1 172.16.1.3`
+Ara sí que el ping funciona, ho veiem ja que rebem echo-reply a SimNet0.
+A SN0: Primer echo-request DF=Set, segon echo-request DF=Set, tercer echo-request DF=Not Set i MF=Set. Deduïm que
+el tercer paquet s’ha pogut fragmentar.
+La fragmentació la fa el host2, l’emissor d’aquest paquet. La mida dels paquets és:
+El primer fragment de 986B = 944B (dades) +20B(IP)+8B(ICMP)+14B(eth)
+El fragment de 90B = 56B(Data)+20B(IP)+14B(eth)
