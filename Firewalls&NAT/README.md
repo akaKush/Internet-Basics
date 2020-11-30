@@ -16,11 +16,13 @@
   - [Conseqüències d'utilitzar NAT](#conseqüències-dutilitzar-nat)
   - [Problemes i limitacions de NAT](#problemes-i-limitacions-de-nat)
   - [Exemples](#exemples)
+    - [FTP + NAT](#ftp--nat)
   - [Conclusions](#conclusions)
 - [Firewalls & NAT in Linux](#firewalls--nat-in-linux)
   - [Netfilter](#netfilter)
   - [Netfilter Operational](#netfilter-operational)
   - [Chain & Rule Configuration](#chain--rule-configuration)
+    - [Exemples de iptables](#exemples-de-iptables)
 
 ---
 
@@ -218,16 +220,107 @@ Quan les @IP canviem, hem de tenir en compte algunes consideracions:
 - Aquestes @IP han d'estar correctament traduides --> **El router ha d'utilitzar** (a part de NAT) **ALG (Application-Level-Gateway)**
 
 ## Exemples
+### FTP + NAT
 
+A l'inici d'una sessió FTP, hi ha un intercanvi de comandos de control, i les **adreces IP** del host **s'inclouen** en aquests comandos.
+
+Aquestes adreces es troben a la data, i s'han de traduir per fer funcionar FTP correctament. *Les adreces estan escrites en ASCII, NO estan codificades en 32 bits*.
+
+L'objectiu és mantenir la longitud de les adreces originals, així el router no ha de canviar els números de seqüència de la connexió.
+
+Si la nova adreça és més curta que la original, s'emplena amb 0's.
+- Per exemple: Si NAT tradueix `206.245.160.2` a `192.168.1.2`, el router soluciona el problema afegint 0's fins que hi ha el mateix número de caràcters. Per tant l'adreça codificada serà: **`192.168.001.2`**.
+
+Si la nova adreça és més llarga que la vella, afegim alguns bits nous.
+- Exemple: traduim `192.168.1.2` a `206.245.160.2` el router ho soluciona afegint 2 bytes extres.
+
+Un cop el router executa alguna d'aquestes accions, ha de canviar els ACK i números de seqüència per continuar mantenint la connexió coherent.
 
 ## Conclusions
 
+- NAT ha extès la vida útil de IPv4, allargant el desplegament de IPv6.
+- NAT no és una solució òptima
+- Poden haver-hi diferents comportaments a diferents implementacions de NAT.
+- Les noves aplicaciones i nous protocols necessitaran suportar NAT.
+- Utilitza NAT només si és necessari.
 
 # Firewalls & NAT in Linux
 ## Netfilter
 
+Netfilter és el framework de filtrat de paquets utilitzat a Linux.
+- Consisteix en unes *cadenes de normes* per fer el tractament de paquets.
+- Cada cadena està associada a un "rol" diferent del host quan aquest està processant paquets.
+- Els paquets són processats sequencialment travessant les cadenes de normes.
+- Cada paquet de xarxa, arribant o abandonant un dispositiu travessa **com a mínim** una cadena.
+
+
+Existeixen **5 tipus predeterminats de cadenes**:
+- **PREROUTING**: És la primera cadena que un paquet que ve d'una xarxa troba. Es troba abans de la decisió de routing.
+- **INPUT**: Aquesta cadena s'aplica quan un paquet s'ha d'entregar localment (el host és el destí).
+- **FORWARD**: El paquest entrarà a aquesta cadena si ve d'una xarxa, però el host NO és el destí (el host actua com a router)
+- **OUTPUT**: Aquesta cadena s'aplica quan els paquets s'envien des del host (el host és l'origen)
+- **POSTROUTING**: Els paquets entraran a aquesta cadena després que es prengui la decisió d'enrutament.
+
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/netfilter.png"/>
+
+Com a últim comentari, cal destacar que si un paquet arriba al final de la cadena, aquest passarà per **DROP**.
 
 ## Netfilter Operational
 
+Quan un paquet entra una cadena, el kernel (de Linux) verifica si les normes d'aquella cadena quadren amb el paquet.
+
+Cada cadena conté un seguit d'especificacions per decidir si els paquets quadren amb aquella cadena. S'aplica un veredicte per determinar si aquella cadena s'ha d'aplicar al paquet.
+
+Possibles veredictes de la cadena poden ser: "accept" o "drop for filtering", "change addresses (and ports) for NAT"...
+
+**Metodologia:**
+- Les normes s'examinen sequencialment.
+- Si la norma NO es pot aplicar al paquet, s'examina la següent norma.
+- Si la norma es pot aplicar, s'executa l'acció indicada al veredicte, i no s'examinen més normes.
+- Si un paquet arriba al final de la cadena sense haver passat per cap norma, s'aplica la política per defecte en aquell paquet (drop).
 
 ## Chain & Rule Configuration
+
+Si volem configurar les cadenes de netfilter al kernel de Linux fem servir el comando `iptables` tal que:
+
+- `iptables <table> <op> <chain> <pkt-match-condition> <action>`
+  - `<table>`: Seleccions la taula amb la que treballarem
+    - `-t filter`: selecciona **packet filtering**
+    - `-t nat`: selecciona la taula NAT
+  - `<op>`: Normes d'operacions dins d'una cadena
+    - APPEND: afegeix una nova norma a la cadena (`-A`)
+    - INSERT: insereix una nova norma a una posició dins la cadena (`-I`)
+    - DELETE: eliminar una norma d'una posició dins la cadena (`-D`)
+    - MOVE: mou una norma a una altre posició (`-R`)
+  - `<chain>` El nom de la cadena amb la que volem operar
+    - Packet Fitering: INPUT, OUTPUT, FORWARD
+    - NAT: PREROUTING, POSTROUTING, OUTPUT
+  - `<pkt-match-condition>`: El conjunt de condicions que un paquet ha de cumplir
+    - Physical/Link layer conditions: La interfaç de xarxa on han d'arribar (o transmetre) els paquets.
+    - Network Layer Conditions: Camps al IP Header.
+    - Transport Layer Conditions: Camps al transport Header.
+  - `<action>`: El veredicte s'aplica al paquet si totes les condicions es cumpleixen.
+
+Depenent de les condicions que afegim al comando, haurem d'afegir-ne algunes d'extres per especificar bé la condició que hem escollit.
+
+Per exemple:
+
+- Condicions per la **physical/link layer**: Hem d'indicar la interfície on el paquet s'ha d'enviar o de la que ha de ser transmesa
+  - -i, --in-interface [!] name --> Nom de la interfície per la qual el paquet s'ha rebut (només per paquets entrant a les cadenes INPUT, FORWARD i PREROUTING). *Si afegim l'argument "!", el sentit s'inverteix.*
+  - -o, --out-interface [!] name --> Nom de la interfície per on s'enviarà el paquet (només per paquets que entren a les cadenes FORWARD, OUTPUT i POSTROUTING).
+- Condicions per la **network layer**:
+  - -p, --protocol [!] protocol --> El protocol del paquet que s'ha de comprovar. Pot ser `tcp`, `udp`, `icmp` o `all`.
+  - -s, --source [!] address[/mask] --> Especificació de l'origen.
+  - -d, --destination [!] address[/mask] --> Especificació del destí.
+
+
+### Exemples de iptables
+
+1. Afegir una norma a la cadena de INPUT per fer un DROP de paquets l'origen dels quals és la IP 192.168.1.1, i el protocol  de transport és TCP:
+   `iptables -t filter -A INPUT -s 192.168.1.1 -p tcp -j DROP`
+2. Afegir una norma a FORWARD per fer un DROP de paquets que provinguin del rang d'adreces 192.168.1.0/24, el protocol ICMP, i icmp type echo-request, i rebut a la interfície eth0:
+   `iptables -t filter -A FORWARD -i eth0 -s 192.168.1.0/24 -p ICMP --icmp-type-echo-request -j DROP`
+3. Afegir una norma a OUTPUT per evitar conexions http cap al servidor www.google.com:
+   `iptables -t filter -A OUTPUT -d www.google.com -p tcp --dport 80 --syn -j DROP`
+4. Afegir una norma a SNAT per tots els paquets que abandonen el router utilitzant la interfície eth1, traduint les adreces a 172.16.1.1:
+   `iptables -t nat -A POSTROUTING -o eth1 -j SNAT --to 172.16.1.1`
