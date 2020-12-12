@@ -65,7 +65,7 @@ Llavors, el HostID identifica el host específic a dins d'aquesta xarxa.
 
 ### Class-A Addresses
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/2.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/2.png" height=50% width=50%/>
 
 - *w* entre 0 i 127  ==>  w == NetID,  x.y.x == HostID
 - Existeixen 126 xarxes de tipus A, amb 16.777.214 hosts
@@ -75,7 +75,7 @@ Llavors, el HostID identifica el host específic a dins d'aquesta xarxa.
 
 ### Class-B Addresses
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/3.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/3.png" height=50% width=50%/>
 
 - *w* entre 128 i 191  ==>  w.x == NetID,  y.z == HostID
 - 16.384 xarxes de classe B, amb 65.534 hosts
@@ -84,7 +84,7 @@ Llavors, el HostID identifica el host específic a dins d'aquesta xarxa.
 
 ### Class-C Addresses
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/4.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/4.png" height=50% width=50%/>
 
 - *w* entre 192 i 223  ==>  w.x.y == NetID,  z = HostID
 - 2.097.152 xarxes de classe C, 254 hosts a cada una
@@ -94,7 +94,7 @@ Llavors, el HostID identifica el host específic a dins d'aquesta xarxa.
 
 ### Class-D & Class-E
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/5.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/5.png" height=50% width=50%/>
 
 ## Mapping class D to Ethernet
 
@@ -102,17 +102,17 @@ Tenim una adreça de classe D (multicast) que s'ha d'encapsular en un paquet de 
 
 Per fer-ho simplement es mapeja exactament els 23 bits de l'adreça de multicast als últims 23 bits dels 48 que té una adreça Ethernet. (Els 9 bits restant corresponen a els 4 primers `1110` que indiquen que es tracta de multicast, i els 5 sobrants són bits que no s'utilitzen per res, veure imatge següent)
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/6.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/6.png" height=50% width=50%/>
 
 *Nota: Com que els bits mapejats són els últims, poden haver-hi 32 adreces IP amb la mateixa adreça MAC (degut als primers bits que no són els mapejats), i per això el host ha de comprovar l'adreça IP multicast que li arriba i descartar els paquets si no està registrada.*
 
 Finalment, cada adreça Multicast té la següent estructura:
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/7.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/7.png" height=50% width=50%/>
 
 I la capa MAC, a les interfícies Ethernet segueix el següent procediment per determinar on enviar els paquets:
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/8.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/8.png" height=50% width=50%/>
 
 ## Multicast Scoping
 
