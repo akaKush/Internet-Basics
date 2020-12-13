@@ -242,4 +242,4 @@ Obrim 4 wiresharks de SimNet0 a Simnet3:
     - Només veiem encapsulació IP a SimNet2 --> pq a SimNet3 ho envia amb enrutament unicast, mentres que a SimNet2 al enviar el paquet del R2 al grup, aquest anirà encapsulat.
     - Mida de la GRE Header ???????????????
     - Si ara mirem el fitxer /proc/net/ip_mr_vif veiem com a la interfície eth1 se li han afegit dades a les seves estadístiques, i si executem `ip mroute show` veurem com tenim una ruta creada, amb @origen, @destí, Interfície d'entrada i interfícies de sortida (veure fotos)
-    <img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/escenari.png" height=50% width=50%/>
+    <img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/rutes.png" height=50% width=50%/>
