@@ -10,7 +10,11 @@
     - [Enviant el video a la subxarxa](#enviant-el-video-a-la-subxarxa)
   - [0.7 Routing i Multicast](#07-routing-i-multicast)
     - [Configurant Tunels](#configurant-tunels)
-    - [Routing Multicast Estàtic](#routing-multicast-estàtic)
+    - [Routing Multicast Estàtic (enviament de ping mcast)](#routing-multicast-estàtic-enviament-de-ping-mcast)
+    - [Testejant la xarxa](#testejant-la-xarxa)
+    - [Arbres amb Múltiples branques](#arbres-amb-múltiples-branques)
+    - [Enviant el video (unidireccionalment)](#enviant-el-video-unidireccionalment)
+    - [Arbre BIDIRECCIONAL](#arbre-bidireccional)
 
 ## 0.3 Inicialitzem escenari
 Iniciem la simulació amb `simctl ipmulticast start` i obtenim el següent escenari:
@@ -224,7 +228,7 @@ Si enviem un ping de server a host4, comprovem com també funciona el tunel ja q
 *Observació:* Cal tenir en compte que ICMP s'utilitza normalment per detectar errors, però en el cas de multicast no funciona tant bé, i per tant és possible que tinguem errors a la xarxa i no rebem missatges de control com "Host Unreachable", "Fragmentation Needed", "Time Exceeded", etc.
 
 ---
-### Routing Multicast Estàtic
+### Routing Multicast Estàtic (enviament de ping mcast)
 
 Ara **crearem l'arbre de routing multicast des de l'emissor fins a tots els receptors**.
 Utilitzarem el comando `smcroute`, amb el qual es pot manipular les rutes estàtiques del kernel de Linux.
@@ -247,3 +251,85 @@ Obrim 4 wiresharks de SimNet0 a Simnet3:
   - **Afegim Ruta Estàtica Multicast a R1**: `R1# smcroute -a tunnel0 0.0.0.0 232.43.211.234 eth1` --> *Com que volem arribar a la SimNet0, hem d'enviar els paquets que ens arribin pel tunnel0, sigui quina sigui la @origen, i amb destí al grup 232.43.211.234, a través de la interfície eth1.*
     - Ara si tornem a fer un ping des de server al grup, veurem com a SimNet0 tindrem un missatge Echo Request (el reply no pq no el sap enviar el tràfic multicast).
     - El **TTL** a SimNet0 **és de 1**, i si l'enviem a menys de 3, el paquet no arriba. En cas que posessim el TTL a 4 o més, el paquet arribaria bé però potser també arribaria a altres xarxes no destijades i gastar més recursos dels necessaris.
+
+### Testejant la xarxa
+
+Fins ara hem utilitzat pings per comprovar com flueix el tràfic mcast, però el ping no és una aplicació que envii dades reals.
+A partir d'ara utilitzarem 2 eines per testejar que el multicast funcioni correctament:
+- **ssmping** --> Verifica unincast i multicast routing. Determina si un host por rebre SSM (Source Specific Multicast) d'un altre host, mitjanç¡ant enviament de paquets UDP.
+- **mcsender** and **emcast** --> Ens permeten verificar el correcte funcionament de Mcast.
+
+1. `ssmping`
+   - Iniciem el daemon amb `ssmpingd` des de la consola 0 del server, i comprovem que aquest s'hagi ajuntat al nou grup des de la consola 1 amb **`netstat -gn`**
+   - A host2 executem `ssmping 172.16.1.3`
+
+A la consola del server veiem com aquest rep les requests dels pings mcast enviats des de 192.168.0.2 (host2), envia seguidament un altre missatge unicast de tornada cap a host2, i finalment envia també el missatge mcast amb destí el grup (232.43.211.234).
+
+Si provem de fer el mateix però invertint el sentit, és a dir, host2 treballant com a daemon, i enviem un ssmping des de server cap a host2, veiem com ara es transmeten correctament els pings UNUCAST, però els MULTICAST SÓN DESCARTATS.
+
+### Arbres amb Múltiples branques
+
+Ara hem pogut fer transmissions de paquets entre SimNet0 i SimNet3, però també hem de connectar SimNet5.
+
+L'objectiu és crear un arbre de routing multicast estàtic que pugui transmetre multicast des del server als receptors que es troben a SimNet0 i SimNet5.
+
+1. Eliminem el daemon anterior (amb les seves configuracions) `R2# smcroute -k` i l'iniciem de nou `R2# smcroute -d`
+2. Ara hem de connectar noves rutes multicast estàtiques, però la **diferència** és que ara posarem **una llista d'interfícies de sortida** que s'utilitzaran com a output.
+Ho fem amb el següent comando: `R2# smcroute -a eth1 0.0.0.0 232.43.211.234 tunnel0 tunnel1`.
+Ens unim a la interfície entrant eth1 per unir-nos al grup: `R2# smcroute -j eth1 232.43.211.234`
+
+Ara comprovem que funcioni la configuració amb **ssmping**:
+```
+server# ssmpingd
+host2# ssmping 172.16.1.3
+host4# ssmping 172.16.1.3
+```
+- La comunicació amb host2 funciona, però la de **host4** no --> R1 està ben configurat per fer forwarding de paquets multicast però **R3** no, li **hem d'afegir la ruta** per fer **forwarding de paquets amb destí el grup** 232.43.211.234.
+
+**Configurem R3:**
+- Iniciem daemon `smcroute -d` --> *sempre que vulguem fer que un router pugui fer forwarding de multicast, hem d'iniciar el daemon en aquest router*
+- Afegim ruta per fer forwarding de paquets mcast: `R3# smcroute -a tunnel1 0.0.0.0 232.43.211.234 eth1` --> Tots els paquets que entrin per la interfície tunnel1 amb destí 232.43.211.234 sortiran per defecte per la interfície eth1 (per arribar a SimNet5).
+- Ens unim a la nova ruta: `R3# smcroute -j tunnel1 232.43.211.234`
+
+Si ara tornem a enviar els ssmping des de host4, veiem com **ja ens arriben**.
+
+### Enviant el video (unidireccionalment)
+
+Ara afegim un nou grup 225.1.2.3 destinat al control de la transmissió de missatges.
+Configurem els 3 routers multicast pel grup 225.1.2.3:
+`RX# smcroute -a "if d'entrada" 0.0.0.0 225.1.2.3 "ifs de sortida"`
+
+I executem netstat -gn a cada un per comprovar que ens haguem afegit als grups.
+
+- Iniciem `udp-receiver` a host2 i host4:
+    `host2# udp-receiver --file=big_664_in_host2.mpg --mcast-all-addr 225.1.2.3 --ttl 3 --interface eth1 --portbase 22345`
+    `host4# udp-receiver --file=big_664_in_host4.mpg --mcast-all-addr 225.1.2.3 --ttl 3 --interface eth1 --portbase 22345`
+
+- Iniciem `upd-sender` al server:
+    `server# udp-sender --file=./big_664.mpg --portbase 22345 --nopointopoint --interface eth1 --ttl 3 --mcast-addr 232.43.211.234 --mcast-all-addr 225.1.2.3 --nokbd --async --max-bitrate 900K --autostart 1 --blocksize 1400`
+
+Si ho tenim tot ben configurat, veiem com se'ns transmet el fitxer als dos hosts. 
+Si volem comprovar que sigui el mateix arxiu, executem `md5sum big_664.mpg` al server, host2 (`md5sum big_664_in_host2.mpg`) i host4 (`md5sum big_664_in_host4.mpg`), i si ens retorna el mateix Hash, es tracta del mateix fitxer.
+
+
+### Arbre BIDIRECCIONAL
+
+Per crear un flow bidireccional, a part de tenir l'arbre que fa forwarding de paquets mcast des de **server** cap a host2 i host4, hem de configurar aquests tal que també tinguem forwarding de **host2** i **host4** cap a server.
+
+Per fer-ho hem de configurar els routers multicast que arriben a cada un d'aquests hosts tal que:
+
+- `R2# smcroute -a tunnel0 0.0.0.0 232.43.211.234 eth1` --> Tot el que ens arribi per tunnel0 a R2, amb destí 232.43.211.234, que faci forwarding a través de eth1. 
+- `R2# smcroute -a tunnel1 0.0.0.0 232.43.211.234 eth1` --> Tot el que ens arribi per tunnel1 a R2, amb destí 232.43.211.234, que faci forwarding a través de eth1.
+- `R1# smcroute -a eth1 0.0.0.0 232.43.211.234 tunnel0` --> fem forwarding de paquets que entrin per eth1, de qualsevol src, amb destí 232.43.211.234 cap a la interfície tunnel0
+- `R3# smcroute -a eth1 0.0.0.0 232.43.211.234 tunnel1` --> fem forwarding de paquets que entrin per eth1, de qualsevol src, amb destí 232.43.211.234 cap a la interfície tunnel1
+
+Ara des de host2 i host4 exeutem:
+- `host2# udp-receiver --file=big_664_in_host2.mpg --mcast-all-addr 225.1.2.3 --ttl 3 --interface eth1 --portbase 22345`
+- `host4# udp-receiver --file=big_664_in_host4.mpg --mcast-all-addr 225.1.2.3 --ttl 3 --interface eth1 --portbase 22345`
+
+I desde server:
+- `server# udp-sender --file=./big_664.mpg --portbase 22345 --nopointopoint --interface eth1 --ttl 3 --mcast-addr 232.43.211.234 --mcast-all-addr 225.1.2.3 --nokbd --autostart 1 --blocksize 1400`
+
+I observem com es produeix la transmissió del fitxer. En aquest cas com que no hem limitat el bitrate la transmissió ha estat molt més ràpida.
+
+El wireshark veiem com a totes les xarxes pròpies dels hosts, tenim un missatge inicial i un final indicant que s'uneixen/abandonen el grup un cop s'ha iniciat/acabat la transmissió de dades.
