@@ -234,12 +234,16 @@ Primer començarem configurant l'arbre de routing multicast estàtic per comunic
 Obrim 4 wiresharks de SimNet0 a Simnet3:
 - Al R2 (EL QUAL ÉS EL **ROUTER EMISSOR DE MULTICAST**) **executem el daemon: `smcroute -d`**
   - Si ara executem `cat /proc/net/ip_mr_vif` Veiem totes les interfícies que tenim ara per les que podem enviar tràfic multicast.
-    - **AFEGIM NOVA RUTA MULTICAST ESTÀTICA**: `R2# smcroute -a eth1 0.0.0.0 232.43.211.234 tunnel0` --> *Això enruta a través del tunnel0 els datagrames IP que entrin a través de eth1, de qualsevol @IP d'origen (0.0.0.0), i amb @IP de destí el grup multicast 232.43.211.234*.
+  - **AFEGIM NOVA RUTA MULTICAST ESTÀTICA a R2**: `R2# smcroute -a eth1 0.0.0.0 232.43.211.234 tunnel0` --> *Això enruta a través del tunnel0 els datagrames IP que entrin a través de eth1, de qualsevol @IP d'origen (0.0.0.0), i amb @IP de destí el grup multicast 232.43.211.234*.
     - Ens **ajuntem a aquesta ruta**: `smcroute -j eth1 232.43.211.234` i si ara ens fixem en /proc/net/igmp, veiem com la interfície **eth1** s'ha afegit a un grup (EAD32BE8 --> El qual passat a binari és 234.211.43.232)
     - Si mirem SimNet3, veiem com han aparegut un parell de **missatges IGMP** Membership Reports / Join the group 232.43.211.234
   - **Enviem un ping des del server al grup multicast 232.43.211.234** amb un ttl de 3: `ping -t3 -c1 232.43.211.234`
     - Veiem com el ping funciona. Aquest es veu tant a SimNet2 com a SimNet3, *però hi ha una diferència*: A SimNet3 veiem tant el echo request com el echo reply, pero a SimNet2 només veiem el echo request i cap reply. Això es deu a que el grup multicast, no retorna missatges de confirmació del ping, però en canvi el router si que el retorna al host.
     - Només veiem encapsulació IP a SimNet2 --> pq a SimNet3 ho envia amb enrutament unicast, mentres que a SimNet2 al enviar el paquet del R2 al grup, aquest anirà encapsulat.
     - Mida de la GRE Header ???????????????
-    - Si ara mirem el fitxer /proc/net/ip_mr_vif veiem com a la interfície eth1 se li han afegit dades a les seves estadístiques, i si executem `ip mroute show` veurem com tenim una ruta creada, amb @origen, @destí, Interfície d'entrada i interfícies de sortida (veure fotos)
+    - Si ara mirem el fitxer /proc/net/ip_mr_vif veiem com a la interfície eth1 se li han afegit dades a les seves estadístiques, i si executem `ip mroute show` veurem com tenim una ruta creada, amb @origen, @destí, Interfície d'entrada i interfícies de sortida (veure foto)
     <img src="https://github.com/akaKush/Internet-Basics/blob/main/Multicast/Pictures/rutes.png" height=50% width=50%/>
+    - Tot i així a SimNet1 no veiem res pq no tenim R1 configurat per fer forwarding de paquets IP amb destí al grup 232.43.211.234.
+  - **Afegim Ruta Estàtica Multicast a R1**: `R1# smcroute -a tunnel0 0.0.0.0 232.43.211.234 eth1` --> *Com que volem arribar a la SimNet0, hem d'enviar els paquets que ens arribin pel tunnel0, sigui quina sigui la @origen, i amb destí al grup 232.43.211.234, a través de la interfície eth1.*
+    - Ara si tornem a fer un ping des de server al grup, veurem com a SimNet0 tindrem un missatge Echo Request (el reply no pq no el sap enviar el tràfic multicast).
+    - El **TTL** a SimNet0 **és de 1**, i si l'enviem a menys de 3, el paquet no arriba. En cas que posessim el TTL a 4 o més, el paquet arribaria bé però potser també arribaria a altres xarxes no destijades i gastar més recursos dels necessaris.
