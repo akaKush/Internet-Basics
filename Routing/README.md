@@ -5,6 +5,15 @@
     - [Distributed BF Version](#distributed-bf-version)
     - [Dijkstra](#dijkstra)
   - [RIP](#rip)
+    - [Routing Database](#routing-database)
+    - [Update Algorithm](#update-algorithm)
+      - [Exemples](#exemples)
+    - [Possibles millores](#possibles-millores)
+    - [RIP Protocol](#rip-protocol)
+      - [RIP-1](#rip-1)
+      - [RIP-2](#rip-2)
+      - [RIPng](#ripng)
+    - [RIP Limitations](#rip-limitations)
   - [Linux/Quagga](#linuxquagga)
   - [OSPF](#ospf)
 
@@ -48,7 +57,136 @@ Aquest algoritme s'utilitza només en topologies que **NO tinguin límits amb pe
 Comprovem el funcionament d'aquest algoritme amb una hipòtesis inductiva. Això significa que hem de provar que el pas inicial de l'algoritme és òptim i llavors cada pas següent sigui també òptim.
 
 ## RIP
+El **Routing Information Protocol** és un protocol que s'utilitza(va) en **xarxes IP petites/mitjanes**. El RIP es basa en un intercanvi de vectors de distàncies i una versió distribuida de BF algorithm.
+Actualment està obsolet deixant pas a nous protocols com OSPF i el OSI.
 
+Per poder utilitzar RIP, necessitem:
+- BBDD de routing
+- Protocol per intercanviar informació sobre les rutes.
+- Un algoritme per actualitzar aquesta informació.
+
+### Routing Database
+Cada entitat RIP (normalment routers), manté informació de totes les seves xarxes (i possiblement dels hosts individuals), del seu **RIP routing domain**.
+
+Cada entrada a la bbdd, conté el següent router intermediari (**next hop**) a on els datagrames s'han d'enviar per poder arribar a la destinació final.
+
+Cada entrada a la bdd conté la següent info:
+- **Address**: @ de la xarxa o host de destí (@IP/MASK)
+- **Metric**: La mètrica o el cost des d'un node fins al destí.
+- **Router**: La @IP del **next hop**
+- **Interface**: La interfície que s'ha d'utilitzar per arribar al router següent.
+- **Timers**: Utilitzats per controlar les dinàmiques la informació de routing.
+
+Normalment *s'utilitza el número de hops com a mètrica*.
+
+Si un RIP està connectat directament a la destinació, llavors la distància entre aquestes dues entitats és **1 hop**. Si hi ha un router entremig, tenim distància 2, i així anar fent.
+
+El **número màxim de hops** per arribar al destí és **15**.
+La **distància 16** significa "infinit", que no estan connectats.
+
+### Update Algorithm
+
+Els algoritmes de vector de distàncies reben el seu nom del fet que és possible computar rutes òptimes periòdicament intercanviant els vectors de distàncies de diferents destinacions que cada node té a la xarxa.
+
+La **bbdd de cada node RIP** s'inicialitza amb una **descripció de les entitats RIP** que estan **directament connectades** (amb mètrica=1), i llavors actualitzar-la amb la versió distribuida de BF.
+
+Veiem 2 exemples:
+
+- **Topologia Estàtica**: Quan una entitat RIP rep el vector de distàncies amb les estimacions dels seus veins.
+Llavors per cada destinació 'n', el node 'i' compara la mètrica proveida pel veí, amb la seva entrada actual per aquesta destinació. Si aquesta és més petita, el node canvia la mètrica.
+D'aquesta manera, desrpés de rebre estimacions de tots els nodes de la xarxa, 'i' tindrà el camí més curt fins a totes les destinacions.
+
+- **Topologia Dinàmica**:
+    Si la mètrica inicial és massa petita, l'algoritme de topologia estàtica no funciona bé. Per tant, afegim un mètode per incrementar-la a part de decrementar-la.
+    En el cas d'aquest algoritme, és segur executar-lo asíncronament, el que vol dir que cada entitat RIP pot enviar updates dels seus vectors de distància segons el seu propi clock.
+    Originalment cada entitat transmetia updates cada 30 segons, però a mesura que les xarxes van anar creixent de mida, ha quedat en evidència que no podia haver-hi una rebentada del tràfic cada 30 segons.
+
+#### Exemples
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/RIP-update.png" height=50% width=50%/>
+
+*Com podem veure a la imatge la xarxa N1 està connectada a 2 routers, RA i RB. Assumim que tots els routers del domini corren RIP. Veurem com la informació que està a N1 es pot distribuir amb RIP. Com que l'ordre de les updates que farà el RIP està distribuit aleatòriament, l'exemple que veurem és només una de les possibles realitzacions de procés d'actualització de RIP.*
+
+1. Com a condició inicial assumim que els únics routers que tenen la **info de N1** són **RA** i **RB**. Llavors, que **RA** és el **primer** router en **enviar info** de N1 en un missatge RIP. A aquesta info li direm **{N1, 1}**, que significa que el missatge RIP enviat per RA inclou una **entrada per N**1, ensenyant que el router només necessita **1 hop**. N1 envia el missatge als seus **one-hop-neighbours** RB i RC. Un cop rebuda aquesta info, **RC actualitza la seva routing database**, ja que la info rebuda desde RA informa d'una nova xarxa a l'abast. RB **no actualitza res**, ja que ja coneix N1 amb un **shorter path**.
+2. Ara **RC** decideix que ha d'enviar un missatge RIP i **inclou la nova info** que coneix sobre R1, la qual és {N1, 2}. RC envia aquesta info als seus veins propers: RA i RD. En aquest cas, RD és el primer cop que veu info sobre N1, i per tant actualitza la seva bbdd. RA òbviament no fa res.
+3. Ara **RB** envia un missatge RIP incloent la seva info ({N1, 1}) als seus veins: RA i RD. En aquest cas, RA òbviament no fa res, però **RD** sí que a**ctualitzarà** la seva bbdd ja que ha trobat un c**amí més curt** per arribar a N1.
+4. Aquest cop, serà **RD** el que enviarà un missatge RIP, però ningú farà res ja que la info que passa RD és pitjor que la que tenen tots els seus veins per arribar a N1.
+
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/RIP-update-2.png" height=50% width=50%/>
+
+Exemple2: Assumim que **un dels enllaços està trencat**.
+*Ara veurem com alguns nodes tenen estimacions massa baixes per arribar a N1, i haurem d'incrementar la mètrica.*
+
+1. Condició inicial: Tots els routers ja tenen tota la info que hem extret al primer exemple. En aquest moment, com que **RB detecta que el seu enllaç està trencat**, i per tant actualitza la seva bbdd posant la seva mètrica a **16**.
+2. **RA** envia un missatge RIP a un dels seus **one-hop** neighbours, RB i RC. Quan rep la info, **RB actualitza la seva bbdd** pq la info rebuda per RA informa d'un **nou camí** (més curt) per **arribar de nou a N1**. RC no fa res pq ja té la mateixa mètrica.
+3. En aquest moment, **RB** envia un missatge RIP als seus veins propers, RA i RD. RA no fa res, però **RD** actualitza  la seva bbdd perquè **tot i obtenir una mètrica pitjor**, prové del seu **next-hop router**.
+
+### Possibles millores
+
+Existeixen millores per les dinàmiques de xarxa en un domini RIP. Aquestes millores són l'utilització de:
+- **Timers**: Si un cert Router X s'inclou a la millor ruta per un destí en concret d'un altre router Y, i el router X **ja no està disponible**, l'algoritme possiblement mai reflexaria els canvis al router Y.
+Per aquest motiu existeixen **dos timers** associats a cada ruta:
+  - **Timeout**: Utilitzat per limitar el temps que una ruta pot quedarse en una bbdd d'un router en concret sense ser actualitzada. El timout normalment són **180 segons**. Si no es rep cap actualització en aquest temps, el **hop count** s'actualiltza a **16** i no es pot arribar més a aquella xarxa.
+  - **Garbage-Collection Timer**: S'utilitza per fer-li saber als routers quan una **ruta ja no és valida**. Per default són **120 segon**s, i si durant tot aquest temps la ruta **no canvia** de **hop-count=16**, aquesta ruta **s'elimina de la bbdd**.
+
+- **Count to Infinity**: Ens reflecteix el problema de si tots els links que enllacen amb una certa xarxa són trencats, els Routers enviarien la nova info als seus veins, la qual faria que l'últim router que estava connectat amb la xarxa posi la seva mètrica a 16. El problema vé quan un altre router li envia la seva info. Com que qualsevol dels altres routers tenen una mètrica més petita que 16 per arribar-hi (ja que abans havien fet RIP i tenien les mètriques de just abans de perdre la connexió amb la xarxa), quan aquests li enviin la seva info a RA, aquest s'actualitzarà i inclourà la mètrica del seu veí. El problema és que això és fals, ja que ni RA ni RB poden arribar a la xarxa, i per tant es produirà un bucle on els routers aniran augmentant en 1 la mètrica cada cop fins arribar a infinit. Com que cada cop les bbdd es van actualitzant, els timers no detecten cap problema. És per això que s'ha definit un número que indica "infinit" (16).
+
+- **Split Horizon Rules**: El problema anterior és que RA i RC entren en un bucle de mútua decepció, ja que cada un diu que pot arribar a N1 a través de l'altre. Això es pot prevenir en molts casos, sent cuidadós en quins routers envies la info.
+En RIP, la **split horizon rule** serveix per omitir rutes apreses d'un veí en actualitzacions enviades a aquell mateix veí.
+Bàsicament mai és útil enviar info sobre una certa ruta al veí que estàs utilitzant com a next-hop per la ruta en qüestió.
+
+- **Triggered Updates**: Split horizon rules with poisoned reverse prevenen que s'entri a un bucle entre 2 routers. Però si en tenim 3 ja no funciona bé. Les triggered updates el que fan és per prevenir això, afegeixen una nova norma que digui que qua un **router canvia la mètrica** d'una ruta, s'ha d'**enviar un missatge de update** als seus veins **immediatament**, encara que no sigui el moment d'enviar-lo.
+Això provoca que si quan s'envia un missatge, els routers que el reben actualitzen la bbdd, aquests també hauran d'enviar un missatge immediatament per indicar que la han canviat, i per tant es produirà un **efecte cascada de triggered updates**.
+El problema és que al mateix moment que es podrien estar enviant aquestes triggered updates, també podria ser que s'enviessin updates normals.
+L'últim que cal tenir en compte sobre les triggered updates és que poden saturar la xarxa de càrrega. Perquè això no passi, s'han utilitzat diversos mecanismes per evitar-ho:
+  - Limitar la freqüència de triggered updates.
+  - Indicar que les triggered updates no cal que incloguin la taula de rutes sencera.
+
+- **Hold Down Timer**: Cada router comença el **hold-down timer** quan aquest rep informació sobre una xarxa que ja no s'hi pot arribar (16). Fins que el hold-down timer expira, el router descarta qualsevol missatge d'update que indica que la ruta és accessible de nou.
+Això fa que els routers no acabin confosos amb les diferents informacions que li arribin.
+L'únic problema d'aquest hold-down timer és que força un retard al router a l'hora de respondre a una ruta.
+
+### RIP Protocol
+Els missatges RIP s'envien amb **UDP** al **port 520** per **RIP-1** i R**IP-2**, i al **port 521** per **RIPng**.
+
+Els missatges RIP es poden enviar unicast o broadcast/multicast.
+
+Tenim 2 tipus de missatges bàsics:
+- **RIP requests**: Requests són missatges enviats des d'una entitat RIP a una altre demanant que li envii tota, o una part de la seva taula de rutes.
+- **RIP Responses**: Responses són els missatges enviats d'una entitat RIP a una altre que contenen tota o una part de la taula de rutes. Tot i que es diguin respostes, moltes vegades aquests missatges són enviats sense necessitat d'una request.
+
+#### RIP-1
+Utilitza **classful network addresses** perquè no considera l'enviament de màscares. Per aquest problema no suporta subnetting ni supernetting. A part no suporta autentificació de routers, per tant és vulnerable a atacs.
+
+**Paràmetres UDP/IP**
+- Les RIP Requests s'envien amb UDP al port **destí** 520. De **source port** poden tenir **qualsevol port** (no té pq ser 520).
+- Les RIP Responses, que **responen a una request** s'envien amb un **source port 520** i com a **port de destí** el que ens hagi **indicat la request** com a source.
+- Les RIP responses que s'envien sense request, tenen tant el **port destí i origen al 520**.
+
+#### RIP-2
+Inclou algunes features noves, anomenades "extensions":
+- **Classess Addressing Support i Subnet Mask Specification**
+- **Use of multicassting** --> a l'adreça 224.0.0.9
+- **Next Hop Specification** --> Indica el next hop que hauria de fer el paquet per arribar a la seva destinació final.
+- **Authentication** --> Permet validar la identitat d'un router abans d'acceptar el missatge.
+- **Route Tag** --> S'hi pot posar info addicional d'una ruta.
+
+#### RIPng
+És la versió RIP compatible amb IPv6, la quan també s'anomena **RIPv6**. Està dissenyat per ser el màxim semblant a RIP-2 (el qual està fet per IPv4).
+
+Les principals diferències entre aquests protocols són:
+- Els missatges tenen **128 bits** en comptes de 32 (IPv6)
+- El **nº màxim de RTEs** **NO** està restringit a **25**. Està **restringit segons la MTU** de la xarxa on s'enviin els missatges.
+- **No suporta autentificació**, ja que aquesta es fa a la capa IP per fer-ho més eficient.
+- **No** es poden posar **route tags**.
+- **No inclou el next-hop** per defecte. Si aquest és necessari, s'especifica a una entrada de ruta separada.
+
+### RIP Limitations
+
+El protocol RIP no soluciona tots els possibles problemes de Routing. Les principals limitacions són:
+
+- El protocol està limitat a xarxes les quals el **longest path** (network diameter) és de **15 hops**, i això suposant que cada hop té un pes de 1, en cas de ser major, encara portaria més problemes.
+- RIP depen del mecanisme "**counting to infinity**" per resoldre algunes situacions. Si el sistema de xarxes té diversos centenars de xarxes, i un **bucle de routing** es forma que les **involucra a totes elles**, es trigaria **massa temps a resoldre** el bucle, o **consumiria** tota la **bandwidth**.
+- RIP **utilitza mètriques fixes** per comparar rutes alternatives. **No és apropiat** per situacions on les rutes necessiten ser escollides **basades en paràmetres en temps-real**, com retards, fiabilitat o càrrega.
 
 
 ## Linux/Quagga
