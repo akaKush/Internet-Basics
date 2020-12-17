@@ -15,7 +15,14 @@
       - [RIPng](#ripng)
     - [RIP Limitations](#rip-limitations)
   - [Linux/Quagga](#linuxquagga)
+    - [Comandos](#comandos)
   - [OSPF](#ospf)
+    - [Intro](#intro)
+    - [Broadcast Segments](#broadcast-segments)
+    - [States and Packets](#states-and-packets)
+      - [DOWN](#down)
+      - [INIT](#init)
+      - [2-WAY](#2-way)
 
 En aquest document escriure insights de tot el que crec important a saber sobre els diferents temes que componen Routing.
 
@@ -188,7 +195,139 @@ El protocol RIP no soluciona tots els possibles problemes de Routing. Les princi
 - RIP depen del mecanisme "**counting to infinity**" per resoldre algunes situacions. Si el sistema de xarxes té diversos centenars de xarxes, i un **bucle de routing** es forma que les **involucra a totes elles**, es trigaria **massa temps a resoldre** el bucle, o **consumiria** tota la **bandwidth**.
 - RIP **utilitza mètriques fixes** per comparar rutes alternatives. **No és apropiat** per situacions on les rutes necessiten ser escollides **basades en paràmetres en temps-real**, com retards, fiabilitat o càrrega.
 
-
+---
 ## Linux/Quagga
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/quagga.png" height=50% width=50%/>
 
+En sistemes Linux, el protocol RIP treballa amb 3 espais de memòria (bbdd), les quals mantenen un registre de les millors rutes per optimitzar el temps empleat en triar el SP per arribar al destí, cada cop que tenim un paquet a enviar.
+
+Aquestes 3 taules són:
+
+- **RIB**: BBDD on tots els protocols envien les seves rutes més curtes, i es va actualitzant cada cop que un router troba una nova ruta més curta sigui amb el protocol que sigui.
+- **FIB**: És la BBDD que guarda el registre únicament amb les millors rutes de totes les que hi ha a la RIB. De tots els protocols que tinguem, s'escullen les millors que tenim a la RIB i s'envien a la FIB per mantenir un registre de les millors rutes.
+- **Kernel Forwarding Cache**: És una memòria del kernel que ens permet guardar dinàmicament les rutes utilitzades prèviament per anar més ràpid a enviar els paquets que tenen destins que s'han fet servir fa poc.
+
+**Observacions**
+A la RIB pot ser que hi hagi 2 entrades cap al mateix destí que indiquin camins diferents, segons quin sigui el protocol que ha trobat aquell camí.
+Però això a la FIB no passarà, ja que per escullir quina de les dues rutes és millor, utilitza una taula que es diu **Administrative Distances**, la qual ens indica quin protocol té prioritat sobre els altres, i llavors decideix la millor ruta per afegir a la FIB.
+
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png" height=50% width=50%/>
+
+### Comandos
+
+(Per millor comprensió dels comandos consultar la pràctica)
+Per obrir una consola de Quagga:
+- `vtysh`
+
+
+
+
+
+
+
+
+
+
+
+
+---
 ## OSPF
+
+### Intro
+
+OSPF (**Open Shortest Path First**) és un protocol de routing dinàmic que igual que RIP té en compte quines rutes estan disponinbles i quines no, i va actualitzant la seva bbdd segons aquesta info.
+
+La diferència entre RIP i OSPF és que RIP suposa que cada pes dels enllaços és de 1, i en canvi OSPF té en compte la **velocitat dels enllaços**, i **com estan connectades les xarxes** entre elles.
+
+Cada **Router OSPF** guarda les següents **taules**:
+- **Neighbour table** amb els routers connectats directament.
+- **Topology table**, la qual guarda un mapa de la xarxa (és una bbdd composta per els **estats dels links**).
+- **Routing table**, és la RIB, guarda els **shortest paths** i el protocol que utilitza per trobarlos és el de **Dijkstra**.
+
+El temps de convergència és millor que en RIP perquè si l'estat d'un link canvia, aquest canvi s'exten ràpidament per tota la xarxa.
+
+Els routers OSPF poden separar els dominis en diferents **àrees**.
+Tots els **routers de dins de cada àrea** saben tota la **topologia** d'aquella àrea, i les altres només **reben vectors de distàncies**.
+
+Normalment el disseny de les Àrees OSPF és tal que:
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/arees.png" height=50% width=50%/>
+
+On tenim una **area central**, o **area 0** per on passarà gairebé **tota la informació** que vulguem enviar d'un lloc a l'altre. Seria com un hub que distribueix la informació que li arriba. 
+Totes les altres àrees han d'estar connectades a la 0.
+
+**Àrea 1** i **Àrea 2**, i totes les àrees que estiguin connectades amb la Backbone, enviaran els seus **vectors de distàncies** a la àrea 0, a través dels seus **ABR**.
+
+A més a més, els ABR poden agregar rutes, de manera que es minimitzi el trafic que s'intercanvia entre àrees, i el número d'entrades a la taula de rutes.
+*Per exemple: El ABR d'una àrea que tingui les xarxes **10.0.0.0/24** i **10.0.1.0/24** pot agregar-les entre elles i fer una sola ruta **10.0.0.0/23***.
+
+Cada cop que es produeix un canvi en la topologia, s'actualitzen les taules de rutes per poder fer la xarxa estable.
+
+**AS i ASBRs**
+
+- **Autonomous System:** El conjunt de xarxes IP sota el control d'un o varios operadors de xarxa que presenten una política de rutes comuna i clarament definida s'anomenen Autonomous Systems.
+
+- **Autonomous System Border Routers**: Redistribueixen xarxes externes a OSPF (static, kernel, RIP, etc.), i poden agregar rutes però només si són externes.
+
+### Broadcast Segments
+- Els routers OSPF intercanvien peces d'info de la topologia als **LSAs (Link State Advertisements)**.
+- Cada LSA té un **número de serie**.
+- Si un router **rep un nou LSA**, aquest **actualitza la seva bbdd dels estats dels links ==> LSDB**
+- Els routers **envien** els nous **LSA als seus veins**, per **sincronitzar totes les LSDB**.
+
+Tot i així, per **evitar un excés de LSAs**, OSPF utilitza **Routers Designats** (DR), i **Backup Designated Routers** (DBR) i s'envien els LSAs que s'han d'actualitzar a través de multicast a l'adreça **224.0.0.6** --> (AllDRouters) (en comptes de bcast).
+Llavors quan un DR vol contestar amb la LSA a la resta dels veins, utilitza l'adreça **224.0.0.5** --> (AllSPFRouters).
+
+És a dir:
+*Quan un router actualitza la seva LSDB, envia un LSA a tots els DR, perquè així aquests l'enviin a tots els altres veins de la xarxa. D'aquesta manera s'evita flooding de LSAs*.
+
+Amb el comando `show ip ospf neighbor` veiem els rols dels veins per comprovar quins són els DR i quins no.
+
+**Com triem el DR i el BDR?**
+
+- Comparem els **Priority ID (Hello packet)** i escollim com a DR el que el tingui més alt.
+- Per defecte totes les interfícies tenen **priority ID = 1**.
+- Si tots els routers tenen PriorityID=1, llavors comparem **router-id**, el qual també es troba als Hello Packets.
+- També escollirem com a DR el router amb router-id més alt.
+
+### States and Packets
+
+**OSPF NO UTILITZA CAP CAPA DE TRANSPORT (UPD/TCP)**.
+
+- Encapsula els datagrames IP directament.
+- Té les seves pròpies funcions de **detecció/correcció d'errors**, amb els seus estats i format de paquets:
+  - **Les màquines OSPF tenen 6 estats**:
+    - DOWN
+    - INIT
+    - 2-WAY
+    - EXSTART
+    - LOADING
+    - FULL
+  - **OSPF utilitza 5 tipus de paquets**:
+    - Hello
+    - Database Description (DD)
+    - Link State Request (LSR)
+    - Link State Update (LSU)
+    - Link State Acknowledgement (LSACK)
+- En qualsevol moment, cada router OSPF estarà en algun dels estats amb cada un dels seus veins.
+
+Quan afegim una xarxa a OSPF, es comencen a enviar packets "Hello" i el router es posa en l'estat `DOWN`.
+#### DOWN
+Els **Hello** packets s'envien cada 10 segons i contenen:
+- router-id
+- hello and dead timers
+- màscara de red
+- area-id
+- authentication info
+- Llista de active neighbors (router-ids)
+- Router Priority
+- DR i BDR (link interface addresses)
+
+Quan un router **rep un hello packet** passa a estar al **`INIT` state**.
+#### INIT
+En aquest estat, quan un router rep un Hello packet d'un dels seus veins, apunta el ruoter-id de l'emissor al seu **hello packet**. D'aquesta manera fem un reconeixement de que els dos routers estan connectats.
+
+Quan el router emissor rep un Hello Packet vàlid d'un dels seus veins, amb el seu router-id inclòs, passa al **`2-WAY` state**
+#### 2-WAY
+Aquest estat defineix la comunicació bidireccional establerta entre els 2 routers.
+
+En aquest estat **triem els DR/BDR**.
