@@ -66,7 +66,7 @@ En aquest exercici testejarem VLANs.
 
 Per aixecar VLANs i connectar-les entre elles mitjançant Bridges, necessitem aixecar les interfícies primer per les quals volem crear aquestes VLANs. Ho fem de la següent manera:
 
-![creant VLANs](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.41.50.png)
+![creant VLANs](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2019.28.22.png)
 
 A cada interfície de la xarxa que ens interessa, la aixequem, i li posem un ID (10, 20). Llavors li indiquem que per aquella interfície afegirem un bridge (`brctl addbr br1-10`), i a aquest bridge també li hem d'afegir una interfície (`brctl addif br1-10 eth2.10`) per a poder-lo identificar.
 
