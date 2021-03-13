@@ -59,18 +59,10 @@ Si ara tornem a mirar la taula de MAC, podem veure com ha après l'adreça de bo
 
 
 ### Ex 4
-En aquest exercici testejarem VLANs. 
-- Primer configurem un port a la VLAN. 
-- Després configurem el switching entre "tagged" i "untagged" frames.
-- Finalment configurem switching entre les diferents branques.
+En aquest exercici crearem 2 VLANs, una per connectar Alice, Bob i Carla entre ells, i l'altre per connectar David, Eric i Frank, de forma separada a la primera VLAN. 
 
 Per aixecar VLANs i connectar-les entre elles mitjançant Bridges, necessitem aixecar les interfícies primer per les quals volem crear aquestes VLANs. Ho fem de la següent manera:
 
-![creant VLANs](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2019.28.22.png)
+![creant VLANs a L3](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-13%20a%20les%2014.20.04.png)
 
-A cada interfície de la xarxa que ens interessa, la aixequem, i li posem un ID (10, 20). Llavors li indiquem que per aquella interfície afegirem un bridge (`brctl addbr br1-10`), i a aquest bridge també li hem d'afegir una interfície (`brctl addif br1-10 eth2.10`) per a poder-lo identificar.
-
-Finalment li afegim una adreça IP (que ha de pertanyer a la nostre xarxa) per a poder accedir a aquests (`ifconfig br1-10 192.168.1.1`)
-
-Repetim això per a el 2n bridge a L1 (`br1-20`), i llavors a L2 repetim el procés però amb les seves pròpies interfícies i bridges.
-
+Aquesta foto ensenya els comandos executats a L3, per a crear les dues VLANs 10 i 20, però aquests s'han de repetir tant a L1 com a L2, per indicar a cada router per quines interfícies està connectada aquella VLAN, quins hosts pertanyen als bridges, i per finalment assignar una adreça IP a cada una d'aquestes VLANs.
