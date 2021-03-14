@@ -4,7 +4,7 @@
 
 En aquesta pràctica ens basarem en l'escenari de la següent figura:
 
-![escenari](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![escenari](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-13%20a%20les%2017.40.46.png)
 
 En aquest escenari estudiarem com funcionen conjuntament el switching amb Ethernet, i el routing amb IP.
 
@@ -17,9 +17,9 @@ Partim del **bloc d'adreces 192.168.100.0/24**, i li assignem una IP a **bob i f
 
 Ara provem de fer un ping desde bob a frank i mirem a la SimNet1 2 i 3 el què està passant amb el wireshark:
 
-![ping bob - frank](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![ping bob - frank](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-13%20a%20les%2017.57.53.png)
 
-![wireshark SimNet1](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![wireshark SimNet1](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-13%20a%20les%2017.58.57.png)
 
 A totes 3 xarxes veiem els mateixos missatges, 2 ARP per indicar on estan l'adrecça MAC de la IP amb la que ens volem comunicar, 2 ICMPs corresponents a `echo request` i `echo reply` i finalment 2 ARPs més per fer la mateixa operació de trobar la MAC corresponent al host d'origen i retornar el paquet.
 
@@ -79,7 +79,7 @@ En aquest exercici treballem el concepte de **subnetting**. és a dir la divisi�
 
 Primer necessitem configurar l'escenari segons la següent figura:
 
-![escenari 2](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![escenari 2](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-13%20a%20les%2019.25.30.png)
 
 ```
 virt1# ifconfig eth1 192.168.0.32/24
@@ -96,12 +96,12 @@ Si enviem un ping entre virt1 i virt2 veiem com arriba sense problemes i es guar
 `virt1# arp -s 192.168.0.96 00:70:48:29:5c:99 temp` afegim el mapeig erròni
 
 - Tornem a enviar un ping i veiem què passa:
-![2 pings, 8s](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![2 pings, 8s](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-13%20a%20les%2019.49.06.png)
 
 En aquest cas hem enviat 2 pings separats 8 segons entre sí.
 Veiem com el primer ping NO arriba a destí, però el segon sí. Això és degut a que el primer ping intenta enviar-lo a través del mapeig erròni que li hem posat prèviament, però s'adona que aquella @MAC no és la correcta, i llavors es reajusta automàticament enviant un missatge ARP a **BROADCAST**, i al segon ping ja sap on es troba l'adreça MAC correcta de virt2, la guarda ben mapejada i llavors ja el pot enviar sense problemes.
 
-![wireshark 2 pings](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![wireshark 2 pings](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-13%20a%20les%2019.52.03.png)
 
 En aquest exercici ens plantegen la següent situació:
 - virt1 i virt3 tenen màscara /24
@@ -139,7 +139,7 @@ Veiem com d'aquesta manera també arriben els pings sense problemes.
 
 ## ex4 ip-routing-abc
 
-![escenari ex4](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![escenari ex4](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-13%20a%20les%2021.09.10.png)
 
 Hem de configurar els hosts tal que es puguin enviar pings entre **alice bob i carla**.
 
@@ -173,7 +173,7 @@ r2# route add -net 10.0.0.128/26 gw 192.168.0.1
 Amb aquesta configuració veiem com ens podem enviar pings entre tots els hosts.
 
 ## ex5 ACME Intranet
-![escenari ex5](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![escenari ex5](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-13%20a%20les%2021.40.40.png)
 
 En aquest exerici configurarem la intranet d'una empresa fictícia. A la figura anterior veiem la topologia de la xarxa, on tenim 3 departaments: Marketing, Sales i Production.
 
@@ -230,40 +230,42 @@ Si ara executem **`lynx`**, podem veure des de terminal com si estiguessim utili
 ## ex6 FRAGMENTACIÓ
 
 En aquest exercici practiquem la fragmentació de datagrames IP, en l'escenari de la següent figura:
-![escenari ex6](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![escenari ex6](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-14%20a%20les%2014.43.21.png)
 
 Veiem com la MTU de cada router és diferent. La MTU d'una interfície ethernet pot ser reduida per sota 1500 amb el comando `ifconfig`.
 
 Configurem els routers amb els següents paràmetres:
-![routers](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![routers](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-14%20a%20les%2014.45.44.png)
 
 
 I els hosts així:
-![hosts](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+`host1# ifconfig eth1 192.168.1.3/24 mtu 1500`
+`host2# ifconfig eth1 192.168.3.3/24 mtu 560`
 
 
 Finalment configurem les rutes de cada dispositiu per seguir un sentit anti-horari en l'enviament de paquets.
 
 Fem un ping de host1 a host2 amb la opció -R per veure per quins hops passa per arribar al destí:
-![ping route 1-2](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![ping route 1-2](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-14%20a%20les%2015.04.19.png)
+
 i veiem que passa per host1 --> router2 --> router3 --> host2 --> router1 --> host1.
 
 Si enviem de host2 a host1 veiem els salts:
-![ping route 2-1](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![ping route 2-1](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-14%20a%20les%2015.06.28.png)
 
 I veiem com ara envia de host2 --> router1 --> host1 --> router2 --> router3 --> host2
 
 Si analitzem al wireshark, veiem com els paquets icmp tenen una mida de 84 bytes, i per tant no cal fragmentar-los, i si ens fixem en els FLAGS, veiem com **DF=0, MF=0 i FO=0**
-![84 bytes + Flags](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![84 bytes + Flags](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-14%20a%20les%2015.13.14.png)
 
 Ara anem a enviar paquets d'una mida més gran per veure com es comporten.
 
 `host1# ip neigh flush cache`
 `host1# ping -c2 -s 900 192.168.3.3`
 
-![frag needed terminal](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![frag needed terminal](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-14%20a%20les%2015.18.21.png)
 
-![frag needed wireshark](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![frag needed wireshark](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-14%20a%20les%2015.20.40.png)
 
 Veiem com a l'enviar els 2 pings, el primer es troba que no pot passar per router3 perquè té una mtu de 560, i envia un missatge de **Destination Unreachable (Fragmentation Needed)** a l'origen. Llavors el segon ping s'envia fragmentat des de l'origen.
 
@@ -279,17 +281,17 @@ Ara provem d'enviar un ping de host1 a host2 amb payload 900 bytes, però amb DF
 `ping -c 1 192.168.3.3 -M dont`
 
 Analitzem a les 3 SimNets i veiem què passa:
-![SimNet0](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![SimNet0](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-14%20a%20les%2015.48.33.png)
 
-![SimNet1](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![SimNet1](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-14%20a%20les%2015.49.30.png)
 
-![SimNet2](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![SimNet2](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-14%20a%20les%2015.49.45.png)
 
 - A SimNet0 veiem com el primer paquet (`echo request`) s'envia sense problemes ja que passa per router2 amb mtu 1500. Els següents missatges que veiem són els ARP que envia el router1 per saber on està host1 i poder retornar l'`echo reply`, però el que veiem a continuació són 2 paquets fragmentats, els quals poden haver estat fragmentats al router1 o al router3. Analitzem les altres xarxes per comprovar-ho.
 - A SimNet1 simplement veiem com hi passa el `echo request`, però el reply no ja que s'envia per una altre xarxa. El request s'envia sense problemes, tot i no trobar resposta.
 - Finalment a SimNet2 veiem com després que el router3 envii els paquets ARP de reconeixement, ja s'envien 2 paquets fragmentats, els quals s'han fragmentat al router3 abans d'enviar-los ja que en la interfície de sortida cap a la SimNet2 té una mtu de 560, i per tant el paquet de 900 bytes que hem enviat desde host1, s'ha fragmentat en 2 paquets de 536 i 364 bytes de payload (més les capçaleres (IP=20bytes, ICMP=8 bytes)). Finalment host2 respón amb el `echo reply` corresponent amb els 2 fragments directament separats.
 
-![SimNet2 - inspeccionem](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+![SimNet2 - inspeccionem](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-14%20a%20les%2015.59.46.png)
 
 Notem que si enviessim un ping de payload 1200bytes el router que faria la fragmentació seria el router2, ja que a l'hora d'enviar paquest cap a SimNet1 té una mtu de 1000.
 
