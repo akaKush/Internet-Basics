@@ -31,7 +31,7 @@ Un cop descomentat, reiniciem inetd:
 
 Ara utilitzant netcat desde virt2 podem connectar-nos a la IP de virt1 i indicar el port 13 per veure si ens retorna el servei daytime:
 
-![Daytime](https://github.com/akaKush/Internet-Basics/blob/main/IPv4/images/Captura%20de%20Pantalla%202021-03-14%20a%20les%2015.49.45.png)
+![Daytime](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
 
 Ara hem de buscar el servei ssh:
 `cat /etc/services | grep ssh`
