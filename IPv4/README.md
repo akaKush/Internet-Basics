@@ -295,3 +295,8 @@ Analitzem a les 3 SimNets i veiem què passa:
 
 Notem que si enviessim un ping de payload 1200bytes el router que faria la fragmentació seria el router2, ja que a l'hora d'enviar paquest cap a SimNet1 té una mtu de 1000.
 
+## C. Time To Live (TTL) Exceeded
+
+Aquest últim exercici és bastant òbvi, simplement ens fa enviar pings amb diferents TTL, amb la opició "-t", i així podem observar què passa quan s'acaba el TTL d'algun paquet.
+
+Quan enviem un paquet a una adreça que no es pugui arribar, el paquet anirà fent hops entre les seves rutes fins que el TTL s'hagi exhaurit. Un cop això passi, el hop en el que es trobi aquell moment el paquet, serà el que enviarà un missatge de **TTL exceeded** cap a l'origen del paquet.
