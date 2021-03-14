@@ -275,3 +275,21 @@ Si ens fixem en els flags, veiem:
 - Finalment rebem l'`echo reply` fragmentat igual que l'anterior, i amb els mateixos flags corresponents a cada fragment.
 
 **B. FRAGMENTATION by ROUTERS**
+Ara provem d'enviar un ping de host1 a host2 amb payload 900 bytes, però amb DF=0, és a dir utilitzant la opció `-M dont`.
+`ping -c 1 192.168.3.3 -M dont`
+
+Analitzem a les 3 SimNets i veiem què passa:
+![SimNet0](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+
+![SimNet1](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+
+![SimNet2](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+
+- A SimNet0 veiem com el primer paquet (`echo request`) s'envia sense problemes ja que passa per router2 amb mtu 1500. Els següents missatges que veiem són els ARP que envia el router1 per saber on està host1 i poder retornar l'`echo reply`, però el que veiem a continuació són 2 paquets fragmentats, els quals poden haver estat fragmentats al router1 o al router3. Analitzem les altres xarxes per comprovar-ho.
+- A SimNet1 simplement veiem com hi passa el `echo request`, però el reply no ja que s'envia per una altre xarxa. El request s'envia sense problemes, tot i no trobar resposta.
+- Finalment a SimNet2 veiem com després que el router3 envii els paquets ARP de reconeixement, ja s'envien 2 paquets fragmentats, els quals s'han fragmentat al router3 abans d'enviar-los ja que en la interfície de sortida cap a la SimNet2 té una mtu de 560, i per tant el paquet de 900 bytes que hem enviat desde host1, s'ha fragmentat en 2 paquets de 536 i 364 bytes de payload (més les capçaleres (IP=20bytes, ICMP=8 bytes)). Finalment host2 respón amb el `echo reply` corresponent amb els 2 fragments directament separats.
+
+![SimNet2 - inspeccionem](https://github.com/akaKush/Internet-Basics/blob/main/VLAN/images_p1/Captura%20de%20Pantalla%202021-03-12%20a%20les%2017.05.46.png)
+
+Notem que si enviessim un ping de payload 1200bytes el router que faria la fragmentació seria el router2, ja que a l'hora d'enviar paquest cap a SimNet1 té una mtu de 1000.
+
