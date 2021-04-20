@@ -204,3 +204,34 @@ En aquest exercici analitzem queries recursives i la estratègia de cache del DN
 
 1. In your configuration consider that **nsne** must be configured with a single zone for example.net (single configuration file) and that it must delegate right.example.net to **nsner**. Modify the configuration files of **nsn**, **nsne**, and **nsner** appropriately and describe and test your configuration.
    
+Configuració de **nsn** (`/etc/bind/db.net`)
+
+![config de la zona .net](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2011.58.05.png)
+
+Configuració de **nsne** (`/etc/bind/db.net.example`)
+
+![config zona example.net](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2011.48.05.png)
+
+Configuració de **nsner** (`/etc/bind/db.net.example.right`)
+
+![config right.example.net](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2012.05.49.png)
+
+
+2. Notice that the server nsn has a mistake in its initial configuration file, describe this mistake.
+   
+   L'error d'aquest fitxer és que al principi utilitza la notació de "@", però no ha indicat quin és l'"ORIGIN", i per tant falta afegir la línia `$ORIGIN .net`, o canviar cada "@" per "net."
+
+   Inicialment l'arxiu està així:
+
+   ![config right.example.net](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2011.55.42.png)
+
+   En el meu cas opto per la segona opció ja que crec que s'entén millor. El resultat després d'editar l'arxiu és el següent: (mateixa foto que la primera de l'exercici anterior)
+
+   ![config right.example.net](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2011.58.05.png)
+
+3. After you have implemented the configuration, reset bind in all the name servers of the scenario, capture with wireshark tap0 and comment the traffic and the results observed when executing: `alice:~# dig david.example.com`
+   
+   *He suposat que l'enunciat està malament i es refereix a david.example.net*
+
+
+
