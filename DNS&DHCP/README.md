@@ -63,5 +63,132 @@ Per carregar la configuració de l'escenari, i no haver-la de configurar nosaltr
    Veiem la captura del wireshark:
    ![wireshark alice](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
 
+
+   Com es pot veure, primer tenim un missatge ARP desde alice a broadcast per trobar on està nsce, ja que és el name server de alice.
+   nsce respon amb un altre ARP la seva adreça MAC i llavors ja veiem els missatges DNS.
    
+   En aquests missatges, primer veiem una query del A record per saber en quina IP està alice.example.com, enviada desde alice a nsce.
+
+   En el segon missatge DNS veiem una resposta de nsce cap a alice, amb tots els RRs necessaris; A record de alice.example.com, NS de nsce i A de nsce.
+
+   Finalment tornem a veure els dos últims missatges ARP de nsce cap a alice.
+
+
+5. Using dig, try to resolve the IP address of joker.example.com. Did you find any resolution for this name? Discuss the results.
    
+   Provem un dig desde alice per veure si trobem joker.example.com:
+   ![dig alice -> joker](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+
+   Ens retorna un A record, però sense cap adreça IP, i també ens retorna un SOA indicant que l'autoritat d'aquella zona és nsce.example.com, amb els seus paràmetres.
+
+   Ara provem un dig desde nsce:
+   ![dig nsce -> joker](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+
+   I ens retorna exactament el mateix, on ens diu que NO tenim cap ANSWER.
+
+6. Add the adequate RR in the appropriate server to map the name joker.example.com to the IP address 10.0.0.201. Reset the name server to load the configuration and explain how you test your configuration with dig and ping.
+   
+   Per afegir el nom joker.example.com ho hem de fer al fitxer `/etc/bind/db.com.example` de nsce (utilitzem nano per editar el fitxer):
+
+   ![afegim joker](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+
+   Si ara enviem un ping desde nsce o desde alice a 10.0.0.201 veiem com aquest arriba sense problemes, i fins i tot el podem veure al wireshark com es transmet tant l'echo request com l'echo reply.
+
+   En canvi si fem `dig joker.example.com`no ens retorna res, ja que no hem resetejat el servei de bind.
+
+   Un cop afegida la línia corresponent a joker.example.com, fem un restart del servei de bind: `/etc/init.d/bind9 restart`.
+
+   Llavors fem el dig i ja ens retorna tot correctament:
+
+   ![dig a joker correcte](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+
+    Veiem com ara ja ens retorna el A record corresponent a joker, el seu NS (nsce) i el A record de nsce.
+
+7. Which IP address will be contacted by a mail server if it has to send an e-mail to john@example.com.
+   
+   Si mirem l'arxiu de la zona example.com desde nsce, veiem com ens indica el següent:
+
+   ![info de la zona example.com](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+
+   On ens indica que els mailservers de la zona son el mailserver1 i mailserver2.example.com, els quals estan a 10.0.0.25 i 10.0.0.26 respectivament. Es contactaran en ordre.
+
+8. Try the following command:
+alice:~# dig -t MX example.com
+Explain the output of the command.
+    ![dig de alice a MX de example.com](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+
+    Aquest comando ens retorna la info dels diferents mailservers (tots els que tenen el RR **MX**), amb la seva info corresponent, els seus A records, i el record NS de la zona example.com.
+
+
+
+**Exercici 2**
+
+En aquest exercici analitzem queries recursives i la estratègia de cache del DNS.
+
+1. In this exercise, we analyze a recursive query from alice. To do so, reset the name servers processes of the scenario, capture with wireshark tap0 and explain the flow of DNS messages captured when executing the following command line: `alice:~# dig bob.com`
+   
+   ![wireshark dig bob.com](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+
+   Veiem com ara tenim varis missatges DNS, anem a analitzar-los:
+   - Primer tenim un missatge de alice a nsce.example.com preguntant per bob.com
+   - Llavors nsce.example.com veu que no hi sap arribar, i per tant contacta amb el seu servidor ROOT (10.0.0.1).
+   - Des de root li comunica altre cop a nsce.example.com que el NS de bob.com és nsc.com, el qual està a 10.0.0.11
+   - Els següents dos missatges són una query de nsce.example.com del RR NS de ROOT, i la response de root que el NS està a 10.0.0.1
+   - Un cop resolt, nsce ja pot enviarli una query a nsc preguntant-li pel A record de bob.com
+   - nsc li respon indicant-li que bob.com està a 10.0.0.12, i que el seu NS està a 10.0.0.11
+   - Finalment nsce li envia l'últim missatge a alice indicant el A record de bob.com, el qual es troba a 10.0.0.12 i qui és el seu NS.
+  
+  Després dels missatges DNS veiem uns quants ARP simplement per resoldre les adreces MAC de cada un dels hosts. Primer entre alice i nsce, llavors entre nsce i root i finalment entre nsce i nsc (entre alice i bob no n'hi ha cap pq no alice només vol saber la resolució del nom, però no on està ubicat físicament).
+
+2. We analyze DNS caching in this exercise. To do so reset the name servers processes of the scenario, capture with wireshark tap0 and explain the flow of DNS messages captured when executing the following command line: `alice:~# dig bob.com ; sleep 5 ; dig bob.com` **Note. The sleep command delays for a specified amount of seconds.**
+   
+   ![wireshark dig bob.com amb sleep 5](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+
+   Veiem com el primer dig s'executa de la mateixa manera que en l'exercici anterior, però que el segon no passa per root, ja que alice té la resolució de bob guardada a la cache (**fixar-se en els últims 2 missatges**).
+
+3. Continuing with the analysis of DNS caching, reset the name servers processes of the scenario, capture with wireshark tap0 and explain the flow of DNS messages captured when executing the following command line: `alice:~# dig bob.com ; sleep 5 ; dig bob.com ; sleep 30 ; dig bob.com`
+   
+   Veiem el següent al wireshark:
+
+   ![wireshark dig bob.com amb sleep 5 i 30](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+
+   Primer veiem els mateixos outputs que en l'exercici anterior, però analitzem els últims quatre missatges DNS:
+   - El primer és desde alice a nsce demanant per la resolució de bob.com
+   - nsce ara hauria de contactar ROOT, PERÒ com que la caché de nsce té una duració més alta que la de alice aquest sap que la resolució de bob.com està a nsc, i per tant contacta amb aquest directament.
+   - nsc li respon a nsce on està bob.com (A i NS RRs)
+   - finalment nsce li diu a alice on està bob.com
+
+4. Continuing with the analysis of DNS caching, reset the name servers processes of the scenario, capture with wireshark tap0 and explain the flow of DNS messages captured when executing the following command line: `alice:~# dig alice.com ; sleep 5 ; dig alice.com` **Note. Take into account that alice.com is not a FQDN under our DNS tree.**
+   
+   Veiem els següents missatges a wireshark:
+
+   ![wireshark alice sleep alice](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20)
+
+   - query de alice.example.com preguntant a nsce on està alice.com
+   - nsce contactant a root directament per resoldre alice.com
+   - root indicantli a nsce que l'administrador de la zona .com és nsc i els NS
+   - nsce(.21) contactant nsc(.11) per resoldre alice.com
+   - nsc indicantli a nsce que alice.com NO existeix i qui és la SOA de la zona
+   - nsce indicantli a alice.example.com(.22) que alice.com NO existeix, i qui és la SOA de la zona.
+  
+  Després dels ARP i el temps de sleep, veiem 4 missatges més DNS:
+  - El primer de alice a nsce preguntant per alice.com
+  - Segon com que nsce encara té la resolució de nsc (el resolver de la zona .com) guardat a la seva cache el contacta directament per saber on està alice.com
+  - nsc li respon que alice.com no existeix a nsce
+  - nsce li respon a alice que alice.com no existeix.
+  
+5. Set the negative cache TTL to 10 in the SOA of nsc. Reset the name servers processes of the scenario, cap- ture with wireshark tap0 and explain the flow of DNS messages captured when executing the following command line: `alice:~# dig alice.com ; sleep 5 ; dig alice.com ; sleep 10 ; dig alice.com`
+   
+   Per posar la negative cache TTL a 10, hem d'editar l'arxiu **`/etc/bind/db.com`** de **nsc**:
+
+   ![/etc/bind/d.com](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20)
+
+   Guardem l'arxiu, reiniciem el servei de bind amb `/etc/init.d/bind9 restart` i enviem el comando de l'enunciat després de posar el wireshark a capturar. Veiem els següents missatges:
+
+   ![wireshark despres TTL 10](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20)
+
+   Analitzem els missatges capturats:
+   - Primer veiem fins al missatge 14 la resolució que ja hem vist en exercicis anteriors: **alice -> nsce -> root -> nsce -> nsc -> nsce -> alice**
+   - Llavors els missatges **19 i 20**, són els corresponents al 2n comando `dig alice.com`, el qual només ha tingut 5 de sleep. Com que tots els TTL són més elevats simplement fem el següent recorregut, ja que tenim la info guardada a la cache **alice -> nsce -> alice**.
+   - Finalment del missatge **21 al 24** tenim 4 missatges que corresponen a **alice -> nsce -> nsc -> nsce -> alice**, on veiem com nsce ja no tenia la resolució de alice.com a la seva cache, PERÒ la que si que té és la de com arribar a la zona .com directament, i per tant *no cal que aquest cop contacti a root.*
+
