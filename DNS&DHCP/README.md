@@ -231,7 +231,18 @@ Configuració de **nsner** (`/etc/bind/db.net.example.right`)
 
 3. After you have implemented the configuration, reset bind in all the name servers of the scenario, capture with wireshark tap0 and comment the traffic and the results observed when executing: `alice:~# dig david.example.com`
    
-   *He suposat que l'enunciat està malament i es refereix a david.example.net*
+   Resetegem els serveis de bind de cada un dels servidors modificats, i executem el comando.
+   
+   *NOTA: He fet el dig a david.example.net, i per tant la resolució la fa directament cap al .net, sense passar el CNAME de david.example.com, però afegeixo la foto de la captura del wireshark de quan he fet primer el dig a .net, i desrpés com es veuria el missatge del CNAME de example.com tot i que ja tenim resolucions a la cache*
+
+   ![output dig alice -> david.example.net](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2011.58.05.png)
+
+   ![captura wireshark](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2011.58.05.png)
+
+   ![captura wireshark CNAME](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2011.58.05.png)
+
+    Veiem com amb la configuració anterior la resolució de david.example.com es fa correctament, on se'ns indiquen tots els NS corresponents a cada pas de la resolució fins a arribar a **nsne** i resoldre que david.example.net està a 10.0.0.122, i que david.example.com es tradueix a la mateixa IP gràcies al registre CNAME.
+
 
 
 
