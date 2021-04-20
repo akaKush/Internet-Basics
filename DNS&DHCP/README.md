@@ -1,9 +1,13 @@
 # DNS & DHCP
 
-Per una explicació extensiva de la teoria, podeu veure el següent enllaç: MEDIUM
+Per una explicació extensiva de la teoria, podeu veure els següents enllaços:
+- <a href="">DNS</a>
+- <a href="">DHCP</a> 
+
+## DNS
 
 Per a la pràctica partirem del següent escenari:
-![Escenari DNS](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+![Escenari DNS](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-18%20a%20les%2010.34.13.png)
 
 **Exercici 1**
 
@@ -26,7 +30,7 @@ Per carregar la configuració de l'escenari, i no haver-la de configurar nosaltr
 
 1. Get a console at alice and looking at the configuration explain which is the name server used by this host.
    
-   ![alice name servers](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+   ![alice name servers](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-18%20a%20les%2011.46.25.png)
 
    Veiem clarament com el nameserver de alice està ubicat a la IP 10.0.0.21, el qual pertany a **nsce**.
 
@@ -36,13 +40,14 @@ Per carregar la configuració de l'escenari, i no haver-la de configurar nosaltr
    
    El servidor de example.com és **nsce**.
    Per veure la seva configuració, des de la terminal corresponent a nsce, executem `cat /etc/bind/named.conf`, i veiem el següent:
-   ![configuracio nsce](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+
+   ![configuracio nsce](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-18%20a%20les%2011.49.40.png)
 
    On ens diu que la info per arribar al servidor ROOT està a `db.root`, i que la info per arribar a la zona de **example.com** està a `/etc/bind/db.com.example`
 
    Si ara ens fixem en la info que hi ha dins d'aquest últim fitxer (`cat /etc/bind/db.com.example`):
 
-   ![info zona example.com](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+   ![info zona example.com](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-18%20a%20les%2011.52.18.png)
    
    Veiem el següent:
    1. L'origen és example.com, per tant tot arreu on surti una "@", significa example.com
@@ -61,7 +66,7 @@ Per carregar la configuració de l'escenari, i no haver-la de configurar nosaltr
    L'output del comando anterior el podem veure a la resposta de l'exercici 1.
 
    Veiem la captura del wireshark:
-   ![wireshark alice](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+   ![wireshark alice](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.16.07.png)
 
 
    Com es pot veure, primer tenim un missatge ARP desde alice a broadcast per trobar on està nsce, ja que és el name server de alice.
@@ -77,12 +82,14 @@ Per carregar la configuració de l'escenari, i no haver-la de configurar nosaltr
 5. Using dig, try to resolve the IP address of joker.example.com. Did you find any resolution for this name? Discuss the results.
    
    Provem un dig desde alice per veure si trobem joker.example.com:
-   ![dig alice -> joker](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+
+   ![dig alice -> joker](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
 
    Ens retorna un A record, però sense cap adreça IP, i també ens retorna un SOA indicant que l'autoritat d'aquella zona és nsce.example.com, amb els seus paràmetres.
 
    Ara provem un dig desde nsce:
-   ![dig nsce -> joker](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+
+   ![dig nsce -> joker](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.21.39.png)
 
    I ens retorna exactament el mateix, on ens diu que NO tenim cap ANSWER.
 
@@ -90,7 +97,7 @@ Per carregar la configuració de l'escenari, i no haver-la de configurar nosaltr
    
    Per afegir el nom joker.example.com ho hem de fer al fitxer `/etc/bind/db.com.example` de nsce (utilitzem nano per editar el fitxer):
 
-   ![afegim joker](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+   ![afegim joker](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.27.04.png)
 
    Si ara enviem un ping desde nsce o desde alice a 10.0.0.201 veiem com aquest arriba sense problemes, i fins i tot el podem veure al wireshark com es transmet tant l'echo request com l'echo reply.
 
@@ -100,7 +107,7 @@ Per carregar la configuració de l'escenari, i no haver-la de configurar nosaltr
 
    Llavors fem el dig i ja ens retorna tot correctament:
 
-   ![dig a joker correcte](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+   ![dig a joker correcte](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.33.34.png)
 
     Veiem com ara ja ens retorna el A record corresponent a joker, el seu NS (nsce) i el A record de nsce.
 
@@ -108,14 +115,13 @@ Per carregar la configuració de l'escenari, i no haver-la de configurar nosaltr
    
    Si mirem l'arxiu de la zona example.com desde nsce, veiem com ens indica el següent:
 
-   ![info de la zona example.com](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+   ![info de la zona example.com](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.39.03.png)
 
    On ens indica que els mailservers de la zona son el mailserver1 i mailserver2.example.com, els quals estan a 10.0.0.25 i 10.0.0.26 respectivament. Es contactaran en ordre.
 
-8. Try the following command:
-alice:~# dig -t MX example.com
-Explain the output of the command.
-    ![dig de alice a MX de example.com](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+8. Try the following command: `alice:~# dig -t MX example.com` Explain the output of the command.
+   
+    ![dig de alice a MX de example.com](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.41.31.png)
 
     Aquest comando ens retorna la info dels diferents mailservers (tots els que tenen el RR **MX**), amb la seva info corresponent, els seus A records, i el record NS de la zona example.com.
 
@@ -127,7 +133,7 @@ En aquest exercici analitzem queries recursives i la estratègia de cache del DN
 
 1. In this exercise, we analyze a recursive query from alice. To do so, reset the name servers processes of the scenario, capture with wireshark tap0 and explain the flow of DNS messages captured when executing the following command line: `alice:~# dig bob.com`
    
-   ![wireshark dig bob.com](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+   ![wireshark dig bob.com](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.47.37.png)
 
    Veiem com ara tenim varis missatges DNS, anem a analitzar-los:
    - Primer tenim un missatge de alice a nsce.example.com preguntant per bob.com
@@ -142,7 +148,7 @@ En aquest exercici analitzem queries recursives i la estratègia de cache del DN
 
 2. We analyze DNS caching in this exercise. To do so reset the name servers processes of the scenario, capture with wireshark tap0 and explain the flow of DNS messages captured when executing the following command line: `alice:~# dig bob.com ; sleep 5 ; dig bob.com` **Note. The sleep command delays for a specified amount of seconds.**
    
-   ![wireshark dig bob.com amb sleep 5](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+   ![wireshark dig bob.com amb sleep 5](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2022.03.00.png)
 
    Veiem com el primer dig s'executa de la mateixa manera que en l'exercici anterior, però que el segon no passa per root, ja que alice té la resolució de bob guardada a la cache (**fixar-se en els últims 2 missatges**).
 
@@ -150,7 +156,7 @@ En aquest exercici analitzem queries recursives i la estratègia de cache del DN
    
    Veiem el següent al wireshark:
 
-   ![wireshark dig bob.com amb sleep 5 i 30](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20a%20les%200.16.42.png)
+   ![wireshark dig bob.com amb sleep 5 i 30](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2022.09.05.png)
 
    Primer veiem els mateixos outputs que en l'exercici anterior, però analitzem els últims quatre missatges DNS:
    - El primer és desde alice a nsce demanant per la resolució de bob.com
@@ -162,7 +168,7 @@ En aquest exercici analitzem queries recursives i la estratègia de cache del DN
    
    Veiem els següents missatges a wireshark:
 
-   ![wireshark alice sleep alice](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20)
+   ![wireshark alice sleep alice](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2022.26.45.png)
 
    - query de alice.example.com preguntant a nsce on està alice.com
    - nsce contactant a root directament per resoldre alice.com
@@ -181,14 +187,20 @@ En aquest exercici analitzem queries recursives i la estratègia de cache del DN
    
    Per posar la negative cache TTL a 10, hem d'editar l'arxiu **`/etc/bind/db.com`** de **nsc**:
 
-   ![/etc/bind/d.com](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20)
+   ![/etc/bind/db.com](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2022.40.50.png)
 
    Guardem l'arxiu, reiniciem el servei de bind amb `/etc/init.d/bind9 restart` i enviem el comando de l'enunciat després de posar el wireshark a capturar. Veiem els següents missatges:
 
-   ![wireshark despres TTL 10](https://github.com/akaKush/Internet-Basics/blob/main/Basic%20Network%20Apps/images/Captura%20de%20Pantalla%202021-03-15%20)
+   ![wireshark despres TTL 10](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2022.45.04.png)
 
    Analitzem els missatges capturats:
    - Primer veiem fins al missatge 14 la resolució que ja hem vist en exercicis anteriors: **alice -> nsce -> root -> nsce -> nsc -> nsce -> alice**
    - Llavors els missatges **19 i 20**, són els corresponents al 2n comando `dig alice.com`, el qual només ha tingut 5 de sleep. Com que tots els TTL són més elevats simplement fem el següent recorregut, ja que tenim la info guardada a la cache **alice -> nsce -> alice**.
    - Finalment del missatge **21 al 24** tenim 4 missatges que corresponen a **alice -> nsce -> nsc -> nsce -> alice**, on veiem com nsce ja no tenia la resolució de alice.com a la seva cache, PERÒ la que si que té és la de com arribar a la zona .com directament, i per tant *no cal que aquest cop contacti a root.*
 
+
+**Exercicis opcionals**
+**1.3** Configuració dels NS i zones de .net.
+
+1. In your configuration consider that **nsne** must be configured with a single zone for example.net (single configuration file) and that it must delegate right.example.net to **nsner**. Modify the configuration files of **nsn**, **nsne**, and **nsner** appropriately and describe and test your configuration.
+   
