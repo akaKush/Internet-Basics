@@ -269,7 +269,7 @@ Exercise 1.1 – In this exercise we analize the DHCP service using the scenario
    Per comprovar l'estat del server dhcp, ho fem tal que: `/etc/init.d/dhcp3-server status`.
    Ens retorna el següent output:
 
-   ![configuracio dhcp](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2012.16.08.png)
+   ![configuracio dhcp](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2023.51.56.png)
 
    Podem veure com la única adreça que té guardada és la de alice.example.com, però està comentada.
 
@@ -299,7 +299,7 @@ Capture at least 2 minutes. Which is the assigned IP?
     ```
     I al wireshark veiem el següent al cap de un parell de minuts:
 
-![wireshark DHCP 10.0.0.50](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2012.16.08.png)
+![wireshark DHCP 10.0.0.50](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-21%20a%20les%200.07.03.png)
 
     Primer veiem com s'envia un missatge de **DHCP Discover** cap a broadcast, llavors el servidor DHCP (joker, 10.0.0.201) respon un **DHCP Offer** amb una oferta de @IP lliure (**10.0.0.50**).
     Llavors desde 0.0.0.0 es fa la **DHCP Request** per demanar aquesta @IP, i finalment el server DHCP reson amb el **DHCP ACK** confirmant que la @IP s'ha assignat. (*Com es pot veure el lease time que se li ha assignat????*)
@@ -345,7 +345,7 @@ Take a look at the file `/var/lib/dhcp3/dhclient.leases` and explain the content
 
     Al wireshark veiem el següent:
 
-    ![wireshark DHCP RELEASE](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2012.16.08.png)
+    ![wireshark DHCP RELEASE](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-21%20a%20les%2010.28.16.png)
 
     **El comando "-r" fa que el host en qüestió demani un DHCP Release** i abandoni l'@IP que se li havia assignat prèviament.
 
@@ -354,6 +354,6 @@ Take a look at the file `/var/lib/dhcp3/dhclient.leases` and explain the content
     ??? He descomentat l'apartat de la configuració de alice, i reiniciat el server de dhcp però no he vist res al wireshark...
 
     Tornant a executar el comando `alice# dhclient3 eth1` veiem el següent:
-    ![wireshark DHCP RELEASE](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2012.16.08.png)
+    ![wireshark DHCP RELEASE](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-21%20a%20les%2010.56.38.png)
 
     On hi ha una resolució DNS, i llavors una assignació de IP mitjançant DHCP a alice.
