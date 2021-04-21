@@ -1,5 +1,9 @@
 # DNS & DHCP
 
+- [DNS & DHCP](#dns--dhcp)
+  - [DNS](#dns)
+  - [DHCP](#dhcp)
+
 Per una explicació extensiva de la teoria, podeu veure els següents enllaços:
 - <a href="">DNS</a>
 - <a href="">DHCP</a> 
@@ -244,5 +248,112 @@ Configuració de **nsner** (`/etc/bind/db.net.example.right`)
     Veiem com amb la configuració anterior la resolució de david.example.com es fa correctament, on se'ns indiquen tots els NS corresponents a cada pas de la resolució fins a arribar a **nsne** i resoldre que david.example.net està a 10.0.0.122, i que david.example.com es tradueix a la mateixa IP gràcies al registre CNAME.
 
 
+**1.4 In this exercise we study some more features of the DNS service using the same scenario.**
+
+1. Use the machine joker as a DNS server just for caching and for making queries to the DNS tree on behalf of its clients. Make the clients alice and carla point to this server and test your configuration, for example asking for one register from alice and then, for the same register from carla.
+   
+   ...
 
 
+
+---
+
+## DHCP
+
+Exercise 1.1 – In this exercise we analize the DHCP service using the scenario dns-basic. After the scenario has been started, execute the labels initial and dhcp:
+`phyhost$ simctl dns-basic exec initial` 
+`phyhost$ simctl dns-basic exec dhcp`
+
+1. In joker, check if a DHCP server is running and analyze the DHCP configuration file (`/etc/dhcp3/dhcpd.conf`).
+   
+   Per comprovar l'estat del server dhcp, ho fem tal que: `/etc/init.d/dhcp3-server status`.
+   Ens retorna el següent output:
+
+   ![configuracio dhcp](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2012.16.08.png)
+
+   Podem veure com la única adreça que té guardada és la de alice.example.com, però està comentada.
+
+   Ens diu que aquest (joker) és el servidor DHCP oficial per la xarxa local.
+
+   Com a última cosa que crec rellevant, podem veure el lease time per defecte (60) i el max-lease-time (70).
+
+2. Capture with wireshark tap0 and explain the flow of DHCP messages captured when executing the following command line: `alice:~# dhclient3 eth1`
+Capture at least 2 minutes. Which is the assigned IP? 
+
+    L'output que ens retorna al terminal és el següent:
+    ```
+    alice:~# dhclient3 eth1
+    Internet Systems Consortium DHCP Client V3.1.1
+    Copyright 2004-2008 Internet Systems Consortium.
+    All rights reserved.
+    For info, please visit http://www.isc.org/sw/dhcp/
+
+    Listening on LPF/eth1/fe:fd:00:00:08:01
+    Sending on   LPF/eth1/fe:fd:00:00:08:01
+    Sending on   Socket/fallback
+    DHCPDISCOVER on eth1 to 255.255.255.255 port 67 interval 6
+    DHCPOFFER from 10.0.0.201
+    DHCPREQUEST on eth1 to 255.255.255.255 port 67
+    DHCPACK from 10.0.0.201
+    bound to 10.0.0.50 -- renewal in 32 seconds.
+    ```
+    I al wireshark veiem el següent al cap de un parell de minuts:
+
+![wireshark DHCP 10.0.0.50](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2012.16.08.png)
+
+    Primer veiem com s'envia un missatge de **DHCP Discover** cap a broadcast, llavors el servidor DHCP (joker, 10.0.0.201) respon un **DHCP Offer** amb una oferta de @IP lliure (**10.0.0.50**).
+    Llavors desde 0.0.0.0 es fa la **DHCP Request** per demanar aquesta @IP, i finalment el server DHCP reson amb el **DHCP ACK** confirmant que la @IP s'ha assignat. (*Com es pot veure el lease time que se li ha assignat????*)
+    
+Which is the content of the file `/etc/resolv.conf` of alice. 
+
+    El contingut és el següent:
+    ```
+    alice:~# cat /etc/resolv.conf
+    domain example.com
+    search example.com
+    nameserver 10.0.0.21
+    ```
+
+Take a look at the file `/var/lib/dhcp3/dhclient.leases` and explain the content of this file. Explain the renew, rebind and expire fields. To do so, you can use the manual page of dhclient.conf. Can you access now to alice by her name? why?
+
+    En aquest fitxer trobem els detalls del temps de lease assignat a alice en la request de dhcp.
+
+   - **RENEW:** The renew statement defines the time at which the dhcp client should begin trying to contact its server to renew a lease that it is using.
+  
+   - **REBIND**: The rebind statement defines the time at which the dhcp client should begin to try to contact any dhcp server in order to renew its lease.
+
+   - **EXPIRE**: The expire statement defines the time at which the dhcp client must stop using a lease if it has not been able to contact a server in order to renew it.
+
+
+1. Capture with wireshark tap0 and explain the flow of DHCP messages captured when executing the following command line: `alice:~# dhclient3 -r eth1`
+
+    Al terminal veiem el següent:
+    ```
+    alice:~# dhclient3 -r eth1
+    There is already a pid file /var/run/dhclient.pid with pid 1189
+    killed old client process, removed PID file
+    Internet Systems Consortium DHCP Client V3.1.1
+    Copyright 2004-2008 Internet Systems Consortium.
+    All rights reserved.
+    For info, please visit http://www.isc.org/sw/dhcp/
+
+    Listening on LPF/eth1/fe:fd:00:00:08:01
+    Sending on   LPF/eth1/fe:fd:00:00:08:01
+    Sending on   Socket/fallback
+    DHCPRELEASE on eth1 to 10.0.0.201 port 67
+    ```
+
+    Al wireshark veiem el següent:
+
+    ![wireshark DHCP RELEASE](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2012.16.08.png)
+
+    **El comando "-r" fa que el host en qüestió demani un DHCP Release** i abandoni l'@IP que se li havia assignat prèviament.
+
+2. Capture with wireshark tap0 and explain the flow of DHCP and DNS messages captured when you modify the configuration of the DHCP server in the joker to activate the manual allocation for alice.example.com. Restart the DHCP server of joker and try the configuration.
+
+    ??? He descomentat l'apartat de la configuració de alice, i reiniciat el server de dhcp però no he vist res al wireshark...
+
+    Tornant a executar el comando `alice# dhclient3 eth1` veiem el següent:
+    ![wireshark DHCP RELEASE](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-20%20a%20les%2012.16.08.png)
+
+    On hi ha una resolució DNS, i llavors una assignació de IP mitjançant DHCP a alice.
