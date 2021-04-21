@@ -301,8 +301,9 @@ Capture at least 2 minutes. Which is the assigned IP?
 
 ![wireshark DHCP 10.0.0.50](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-21%20a%20les%200.07.03.png)
 
-    Primer veiem com s'envia un missatge de **DHCP Discover** cap a broadcast, llavors el servidor DHCP (joker, 10.0.0.201) respon un **DHCP Offer** amb una oferta de @IP lliure (**10.0.0.50**).
-    Llavors desde 0.0.0.0 es fa la **DHCP Request** per demanar aquesta @IP, i finalment el server DHCP reson amb el **DHCP ACK** confirmant que la @IP s'ha assignat. (*Com es pot veure el lease time que se li ha assignat????*)
+Primer veiem com s'envia un missatge de **DHCP Discover** cap a broadcast, llavors el servidor DHCP (joker, 10.0.0.201) respon un **DHCP Offer** amb una oferta de @IP lliure (**10.0.0.50**).
+
+Llavors desde 0.0.0.0 es fa la **DHCP Request** per demanar aquesta @IP, i finalment el server DHCP reson amb el **DHCP ACK** confirmant que la @IP s'ha assignat. (*Com es pot veure el lease time que se li ha assignat????*)
     
 Which is the content of the file `/etc/resolv.conf` of alice. 
 
