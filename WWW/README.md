@@ -13,7 +13,7 @@ Content:
 
 L'escenari que utilitzarem per les pràctiques és el següent:
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2012.49.34.png)
 
 *In this exercise, we are going to practice with the WEB service. To do so, start the scenario www shown in the picture above on your physical host (phyhost) by typing the following command:*
  `phyhost$ simctl www-new start`
@@ -30,12 +30,12 @@ L'escenari que utilitzarem per les pràctiques és el següent:
 *Why the browser is not able to establish a TCP connection with the server? Describe the DNS and TCP traffic captured.*
 
 Veiem com ens indica que no s'ha pogut connectar al host remot.
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2012.53.45.png)
 
 Ens indica que primer ha buscat el nom www.example.com, després el port, però que no s'hi ha pogut connectar.
 
 Al wireshark veiem:
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2012.55.31.png)
 
 Primer es fa la resolució IPv6 de www.example.com (AAAA record), i llavors es retorna el A record indicant que www.example.com està a **10.1.1.1**, i qui és el seu nameserver.
 
@@ -45,13 +45,13 @@ Després veiem com s'ha intentat establir una connexió TCP però no s'ha pogut.
 2. *Capture the traffic on tap0 and repeat the previous experiment, but this time execute a netcat in the www machine listening on port 8080. Which version of HTTP is using the browser? Is the connection closed? Describe the DNS and HTTP traffic and kill the netcat to finish.*
 
 Veiem com al terminal ja ens indica que està fent servir **HTTP 1.0**:
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2012.59.50.png)
 
 Host ens indica que està esperant una resposta del servidor.
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2013.00.46.png)
 
 Analitzem els missatges del wireshark:
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2013.02.15.png)
 
 Veiem com primer tenim la resolució típica DNS on ens acaba indicant que www.example.com està a 10.1.1.1, i llavors inicia la connexió TCP correctament (**SYN, SYN-ACK, ACK**), i també veiem com hi ha una connexió HTTP 1.0. Si apretem "enter" veiem missatges de "Continuation" i finalment quan matem el procés de netcat veiem com s'acaba la connexió TCP (**FIN, FIN-ACK, ACK**).
 
@@ -171,12 +171,12 @@ Aquest fitxer serveix per saber què retornar en les peticions que no són adequ
 7. *Capture the traffic on tap0 and start the nginx Web server in the www machine.*
 *`www# /etc/init.d/nginx start`. On the host machine, execute a netcat to connect to the nginx server that you have just started. Over the connection established with netcat and using HTTP 1.0, send an HTTP GET request for the resource “/”. Which response do you obtain? Describe the HTTP traffic captured for the GET request.*
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2013.25.43.png)
 
 Després d'iniciar el servidor nginx i establir una connexió amb netcat a www.example.com, demanem un **GET /** i obtenim l'anterior resposta.
 
 Al wireshark veiem el següent tràfic:
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2013.27.29.png)
 
 On tenim la resolució DNS, la connexió TCP (SYN), la petició de GET (PSH-ACK i ACK) i llavors la petició GET / amb HTTP1.0, però la resposta utilitza HTTP1.1.
 
@@ -184,29 +184,29 @@ On tenim la resolució DNS, la connexió TCP (SYN), la petició de GET (PSH-ACK 
 *Hint: How many sites are enabled in the nginx server? What is the purpose of each of them?*
 *Note: Restore the "" in the server_name section of the default configuration if you want to keep accessing the server through the IP instead of the sites ́ name.*
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2013.31.39.png)
 
 Si **eliminem la part "" de l'arxiu default al directori sites-enabled** i tornem a demanar el mateix GET, ara obtenim una resposta de **503 Service Temporarily Unavailable**.
 
 A wireshark simplement veiem els missatges corresponents a aquesta connexió, i l'últim missatge HTTP de resposta des del server cap al host ens indica el mateix que el terminal:
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2013.33.51.png)
 
 Tornem a escriure les "" a l'arxiu default per continuar accedint utilitzant el nom.
 
 9. *Again, over the connection established with netcat and using HTTP 1.1, send an HTTP GET request for the resource “/” targeting the host www.home.com (or any other hostname you want) in www Which response do you obtain now? Why? Describe the HTTP traffic captured for the GET request.*
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2013.36.21.png)
 Òbviament obtenim un error 503 ja que aquest host no està a cap arxiu de la configuració.
 
 10.  *Send a GET request for the resource “/doc.html”. Which response do you obtain for each request? Is there a resource called doc.html in the www server? Describe the HTTP traffic captured for the GET request.*
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2013.39.37.png)
 
 L'arxiu doc.html NO existeix, per tant no el troba i ens retorna **404 not found**.
 
 11.  *Configure the tap0 interface of the physical host (phyhost) with the IP address 10.1.1.4/24. After that, ask for “/” and “/doc.html” from the phyhost using a firefox browser and the IP address 10.1.1.1. Describe the HTTP traffic captured. Can you use the name www.example.com from the phyhost? why? Propose a way to reach the www machine when typing www.example.com.*
 
-PERQUE NO VA??????????
+PERQUE NO VA?????????? --> Tinc mal escrita la configuració de /etc/bind9/db.example.com segur, sino no sé què és.
 
 
 ---
@@ -220,7 +220,7 @@ PERQUE NO VA??????????
 *• Open the developer tools (e.g. push control+shift+i). A new section will show up in the bottom of the browser. There, one can analyze any matter related with the browser performance. Select the tab named Network, which is responsible for displaying the traffic being exchanged (e.g. when HTTP requests are commited).*
 *Now ask a second time for the index of the previously requested page (e.g. ieeexplore.ieee.org). Describe how this time HTTP caching works.*
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2014.04.33.png)
 
 Veiem moltissims GETs per a cada fitxer de la pàgina, els quals la majoria són js, html o gifs.
 
@@ -251,11 +251,11 @@ Accedim al navegador per visualitzar les imatges a 10.1.1.1/
 `phyhost# display image.gif`
 *You should be able to see an UPC logo. After that, repeat the process using HTTP 1.1.*
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2014.32.00.png)
 
 Al wireshark veiem els següents missatges:
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2014.32.36.png)
 
 On ens diu que ens ha retornat un codi 200 OK, per tant hauriem de tenir la imatge.
 
@@ -266,11 +266,11 @@ Per editar la resposta utilitzem vi...???
 Si volem repetir el procés però utilitzant HTTP 1.1 necessiteme specificar un HOST en el moment del GET tal que:
 
 
-5. *Repeat the process to obtain upc1.gif but this time use the command wget. Explain how you do it (consult the manual page of wget if necessary). Which version of HTTP is used by wget?*
+1. *Repeat the process to obtain upc1.gif but this time use the command wget. Explain how you do it (consult the manual page of wget if necessary). Which version of HTTP is used by wget?*
 
-Per fer servir **wget** ho fem tal que: `pyhost# wget 10.1.1.1/images/upc1.gif` i ens retorna la imatge indicada. WGET suporta HTTP, HTTPS i FTP. Per tant entenem que suporta tant 1.0 com 1.1.
+Per fer servir **wget** ho fem tal que: `pyhost# wget 10.1.1.1/images/upc1.gif` i ens retorna la imatge indicada. **WGET suporta HTTP, HTTPS i FTP**. Per tant entenem que suporta tant 1.0 com 1.1.
 
-Si mirem el wireshark veiem com wget ha utilitzat HTTP 1.1.
+Si mirem el wireshark veiem com **wget ha utilitzat HTTP 1.1**.
 
 
 
@@ -290,7 +290,7 @@ www:/var/www/cgi-bin# chmod 700 datecgi.sh
 2. 
 obrim el browser al pyhost amb la url "http://www.example.com/cgi/datecgi.sh" i veiem el següent:
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2015.10.33.png)
 
 3. 
 El browser intenta descarregarse el cgi perquè a l'arxiu `/etc/nginx/sites-enabled/default` tenim que les default locations són "/" i "_ ^/cgi/", el qual significa que buscarà els cgis dins el directori cgi i ara mateix no hi es ja que cgi-bin és diferent a cgi.
@@ -308,7 +308,7 @@ location /cgi-bin/ {
 ```
 
 5. 
-
+???
 
 
 **Exercici 1.4** Multiple domains and multiple IP addresses (Modificació del server DNS)
@@ -325,17 +325,17 @@ Veiem que està correcte.
 Ara afegim el nom www.example.net al DNS server perquè ho tradueixi a la @IP 10.1.1.1
 Obrim la màquina DNS, afegim el A record de www.example.net al fitxer `/etc/bind/db.example.net` i llavors fem restart de bind perquè funcioni, `/etc/init.d/bind9 restart`.
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2016.31.27.png)
 
 Comprovem desde pyhost que estigui www.example.com i .net ben configurats enviant pings i veien si els reben bé:
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2016.33.08.png)
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+**(MATEIX PROCÉS PER .com)**
 
 Veiem com tots dos arriben bé.
 
-2. 
+1. 
 Executem els comandos indicats a l'enunciat per CREAR i ACTIVAR DOS LLOCS WEB
 ```
 www# cd /etc/nginx/sites-available/
@@ -347,9 +347,9 @@ Ara executem els comandos de l'enunciat per canviar la configuració de root i e
 
 Un cop fets obrim els dos fitxers per comprovar que estiguin ben configurats:
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2016.44.47.png)
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2016.45.01.png)
 
 Un cop comprovat necessitem ACTIVAR els dos llocs web. Per fer-ho anem a sites-enabled i executem el següent:
 ```
@@ -364,9 +364,9 @@ www# ln -s ../sites-available/www.example.net
 ```
 
 Fem un reload de nginx, i ja podem generar els continguts que tindrà cada web.
-Per fer-ho afegim un fitxer index.html a les carpetes corresponents (S'HAN DE CREAR PRÈVIAMENT):
+Per fer-ho afegim un fitxer index.html a les carpetes corresponents (S'HAN DE CREAR PRÈVIAMENT ELS DIRECTORIS):
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2016.50.45.png)
 
 Per .com tenim un altre fitxer index.html igual, però on el text indica que es tracta del .com.
 
@@ -378,7 +378,7 @@ Veiem que accedeixen bé al navegador, però si escrivim 10.1.1.1 accedeix per d
 3. 
 Afegim registres A a la configuració de www.example.org per redirigir les adreces 10.1.1.1 i 10.1.1.2 a www.example.org.
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2016.57.13.png)
 
 Llavors activem aquest domini a www i server amb els següents comandos:
 ```
@@ -394,11 +394,13 @@ Llavors activem aquest domini a www i server amb els següents comandos:
 
 Creem un index.html als dos servidors (www i server) a /var/www/org i comprovem la configuració connectantnos amb netcat i demanant per el fitxer / (index.html).
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2017.13.02.png)
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+Ens connectem per nc i demanem "/":
 
-Veiem com ens retorna correctament el fitxer, codi 200 OK.
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2017.14.43.png)
+
+Veiem com ens retorna correctament el fitxer, codi 200 OK, d'aquesta manera hem configurat el servidor DNS pq distribueixi la càrrega entre diferents IPs.
 
 
 **Exercici 1.5** (Reverse Proxy per distribuir el traffic)
@@ -406,7 +408,7 @@ Veiem com ens retorna correctament el fitxer, codi 200 OK.
 1. 
 Obrim l'arxiu `balancer` de /etc/nginx/sites-available per veure què hi posa:
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2017.44.32.png)
 
 Veiem com el server escolta al port 80, i que el server name és www.example.com.
 Seguidament ens indica la localització on va a buscar els arxius (/). Quan un usuari carrega la pàgina principal (/), el servidor posa els Headers escrits i carrega la url http://tcgi-app$"requested_uri".
@@ -428,36 +430,36 @@ Iniciem el servidor nginx als www1 i www2 i tornem a provar.
 
 Si ara tornem a introduir www.example.com al browser veiem com ens retorna el missatge "It works!".
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2018.11.59.png)
 
 Si mirem al wireshark veiem que l@IP que ha rebut la petició és 10.1.1.12 el qual correspon a **www2**, a més veiem com havia cachejat la request anteriorment, i veiem un missatge de 304 Not Modified.
 
 4. 
 Si recarreguem la pàgina X vegades, veiem que cada cop és un servidor diferent el que processa la petició (alterna entre www1 i www2):
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2018.34.19.png)
 
 
 5. 
 Aturem el servidor www2 amb `www2# /etc/init.d/nginx stop` i recarreguem la pàgina diverses vegades, i mirem ara al wireshark què passsa:
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2018.41.17.png)
 
 Ara cada cop és www1 (10.1.1.11) el que processa la petició, però també veiem com hi ha algún cop que s'intenta fer una connexió TCP amb www2 (10.1.1.12) i aquesta no es pot dur a terme, i llavors es torna a connectar amb www1.
 
 Si restablim el servei nginx a www2 tot torna a funcionar com toca.
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2018.44.11.png)
 
 
 6. WEIGHTS
 
 Modifiquem la configuració "balancer" per afegir pesos als servidors, i que aquest atengui un 75% més de peticions que l'altre:
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2018.47.02.png)
 
 Ara accedim 4 cops com a mínim a www.example.com per veure qui processa les sol·licituds:
 
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2018.50.44.png)
 
 Com podem veure la majoria de vegades la petició és processada per www1, i una de cada 4 per www2. He recarregat la pàgina 8 vegades i d'aquestes 8 només 2 ha estat servida per www2 (25%).
 
@@ -475,41 +477,39 @@ Utilitzarem el certificat proveït pel paquet *ssl* que es troba a:
 Passos:
    1. Creem un **parell de claus** pel CA:
    `www# openssl genrsa -des3 -out mycakey.pem 2048` (protegida amb DES3)
-   ![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+   ![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2019.10.17.png)
 
    2. Creem el **certificat** pel CA:
    `www# openssl req -new -x509 -days 2000 -key mycakey.pem -out mycacert.pem`
-   ![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png) (emplenem amb les dades que creiem, no és important en aquest exercici)
+   ![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2019.13.35.png) (emplenem amb les dades que creiem, no és important en aquest exercici)
 
    3. Si volem **comprovar les dades del certificat** ho podem fer amb:
    `www# openssl x509 -in mycacert.pem -text -noout`
 
    4. Ara ja podem **crear la "parella de la clau del servidor"**, "server key pair":
    `www#openssl genrsa -out myserverkey.pem 2048` (notar que NO fem servir la opció -des3 aquí, ja que necessitem la clau privada en clar, no protegida)
-   ![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+   ![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2019.16.13.png)
 
    5. Com que no la hem protegit, li hem de **restringir l'accés**, per tand modifiquem permisos pq no tothom hi pugui accedir:
    `www# chmod 400 myserverkey.pem`
 
    6. Ara creem la **request del certificat** (.csr):
    `www# openssl req -new -key myserverkey.pem -out myservercert.csr` --> Ens demanarà que emplenem uns camps, aquí hem d'utilizar un FQDN del server, en aquest cas www.example.com
-   ![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
 
    7. Utilitzem la clau del CA per **signar el certificat**, i creem el fitxer "myserver.crt":
    `www# openssl x509 -req -in myservercert.csr -CA mycacert.pem -CAkey mycakey.pem -CAcreateserial \-days 360 -out myservercert.pem` (important utilitzar www.example.com com a Domain Name)
-   ![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
    
    8. Finalment **eliminem el request** del certificat:
    `www# rm myservercert.csr`
 
 
-2. Canviem la configuració per utilitzar HTTPS
+1. Canviem la configuració per utilitzar HTTPS
 
 Primer utilitzem la configuració default per tenir una plantilla i la editem:
 `www/etc/nginx/sites-available# cp default www.example.com`
 
 Llavors l'editem amb nano i posem les configuracions necessaries per utilitzar el certificat ssl i la clau:
-![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/DNS%26DHCP/DNS_images/Captura%20de%20Pantalla%202021-04-19%20a%20les%2021.20.07.png)
+![WWW scenario](https://github.com/akaKush/Internet-Basics/blob/main/WWW/Practica_Images/Captura%20de%20Pantalla%202021-04-24%20a%20les%2019.31.48.png)
 
 Habil·litem la nova configuració i restablim el servei nginx i comprovem que funcioni:
 
