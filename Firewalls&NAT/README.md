@@ -1,6 +1,6 @@
 # Pràctica Firewalls & NAT
 
-![escenari](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/../../../../../../../Pictures/escenari.png)
+![escenari](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/escenari.png)
 
 ### Exercici 1
 
@@ -167,11 +167,11 @@ Per eliminar el traffic ICMP, afegim el següent comando a host1:
 **(a) Si desde Rint se ejecuta un ping con destino host1 ¿se transmitirá el correspondiente mensaje ICMP echo-request por la red? ¿Es posible capturar el mensaje de respuesta ICMP echo-reply? Describa lo que ocurre en este caso.**
 
 Posem wireshark a capturar a SimNet2 i fem un `ping -c 1 192.168.1.7`, i veiem com ens indica que NO ha arribat.
-![ping rint host1 not founf](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/../../../../../../../Pictures/escenari.png)
+![ping rint host1 not founf](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/Captura%20de%20Pantalla%202021-05-07%20a%20les%2015.11.46.png)
 
 **(b) Si en lugar de enviar el ping desde Rint hacia host1, lo hacemos en sentido contrario (ping desde host1 hacia Rint) ¿se transmitirá el correspondiente mensaje ICMP echo-request? ¿y el echo-reply? Describa lo que ocurre en este caso.**
 
-![ping host1 rint](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/../../../../../../../Pictures/escenari.png)
+![ping host1 rint](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/Captura%20de%20Pantalla%202021-05-07%20a%20les%2015.13.55.png)
 
 Veiem com ara si que es transmet el echo reply a través de la xarxa, però tot i així des de terminal ens indica que el packet no ha arribat a host1 ja que aquest té el trafic icmp filtrat.
 
@@ -245,7 +245,7 @@ A Rbcn afegim el següent:
 
 El qual indica a Rbcn que després de fer la decisió d'enrutament del paquet, tradueixi la direcció d'origen de la interfície eth2 a 10.0.2.2 i així el paquet sàpiga retornar.
 
-![ping www test](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/../../../../../../../Pictures/escenari.png)
+![ping www test](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/Captura%20de%20Pantalla%202021-05-07%20a%20les%2017.43.27.png)
 
 Veiem com ara si que arriba bé el ping i també retorna correctament.
 
