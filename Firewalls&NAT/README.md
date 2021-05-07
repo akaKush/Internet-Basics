@@ -1,326 +1,259 @@
-<h1>Firewalls i Traducció d'Adreces de Xarxa</h1>
-
-
-- [Firewalls](#firewalls)
-  - [Introducció](#introducció)
-  - [Objectius dels Firewalls](#objectius-dels-firewalls)
-  - [Packet Filtering Firewalls](#packet-filtering-firewalls)
-  - [Stateful Filtering Firewalls](#stateful-filtering-firewalls)
-  - [Proxy Firewalls](#proxy-firewalls)
-  - [Next Generation Firewalls](#next-generation-firewalls)
-- [NAT](#nat)
-  - [Raons per utilitzar NAT](#raons-per-utilitzar-nat)
-  - [Intro](#intro)
-  - [Utilització de NAT](#utilització-de-nat)
-  - [Tipus de NAT](#tipus-de-nat)
-  - [Conseqüències d'utilitzar NAT](#conseqüències-dutilitzar-nat)
-  - [Problemes i limitacions de NAT](#problemes-i-limitacions-de-nat)
-  - [Exemples](#exemples)
-    - [FTP + NAT](#ftp--nat)
-  - [Conclusions](#conclusions)
-- [Firewalls & NAT in Linux](#firewalls--nat-in-linux)
-  - [Netfilter](#netfilter)
-  - [Netfilter Operational](#netfilter-operational)
-  - [Chain & Rule Configuration](#chain--rule-configuration)
-    - [Exemples de iptables](#exemples-de-iptables)
+# Pràctica Firewalls & NAT
+
+![escenari](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/../../../../../../../Pictures/escenari.png)
+
+### Exercici 1
+
+El primer exercici és per entendre els conceptes bàsics del filtrat de paquets (firewalls).
+
+Iniciem amb `simctl fwnat start`, i configurem les màquines de les xarxes Net0, Net1 i Net2 amb els següents comandos:
+
+- Per configurar les INTERFÍCIES: `simctl fwnat exec ifcfg`
+- Per configurar les RUTES d'encaminament: `simctl fwnat exec routecfg`
+
+Ara comprovem com han quedat configurades les màquines **Rbcn**, **www**, **Rint** i **host1**:
+
+```
+Rbcn:~# ifconfig
+eth1      Link encap:Ethernet  HWaddr fe:fd:00:00:03:01
+          inet addr:172.16.1.1  Bcast:172.16.1.255  Mask:255.255.255.0
+          inet6 addr: fe80::fcfd:ff:fe00:301/64 Scope:Link
+          UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+          RX packets:19 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:3 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:1288 (1.2 KiB)  TX bytes:338 (338.0 B)
+          Interrupt:5
+
+eth2      Link encap:Ethernet  HWaddr fe:fd:00:00:03:02
+          inet addr:10.0.2.2  Bcast:10.0.2.255  Mask:255.255.255.0
+          inet6 addr: fe80::fcfd:ff:fe00:302/64 Scope:Link
+          UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+          RX packets:4 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:3 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:224 (224.0 B)  TX bytes:338 (338.0 B)
+          Interrupt:5
+
+lo        Link encap:Local Loopback
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:16436  Metric:1
+          RX packets:10 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:10 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0
+          RX bytes:660 (660.0 B)  TX bytes:660 (660.0 B)
+
+Rbcn:~# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.1.0     172.16.1.3      255.255.255.0   UG    0      0        0 eth1
+10.0.2.0        0.0.0.0         255.255.255.0   U     0      0        0 eth2
+172.16.1.0      0.0.0.0         255.255.255.0   U     0      0        0 eth1
+0.0.0.0         10.0.2.1        0.0.0.0         UG    0      0        0 eth2
+```
+**Rbcn**
+Veiem com tenim 2 interfícies configurades, eth1 (172.16.1.1) i eth2 (10.0.2.2).
+La taula de rutes ens indica com per arribar a les xarxes 192.168.1.0/24 (a través de 172.16.1.3) i 172.16.1.0/24 utilitzem la interfície eth1, i la eth2 per arribar a la 10.0.2.0/24 i a tota la resta (default, 0.0.0.0), aquesta última a través de 10.0.2.1.
+
+```
+www:~# ifconfig
+eth1      Link encap:Ethernet  HWaddr fe:fd:00:00:04:01  
+          inet addr:172.16.1.2  Bcast:172.16.1.255  Mask:255.255.255.0
+          inet6 addr: fe80::fcfd:ff:fe00:401/64 Scope:Link
+          UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+          RX packets:13 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:6 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:964 (964.0 B)  TX bytes:468 (468.0 B)
+          Interrupt:5 
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:16436  Metric:1
+          RX packets:10 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:10 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:660 (660.0 B)  TX bytes:660 (660.0 B)
+
+www:~# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+172.16.1.0      0.0.0.0         255.255.255.0   U     0      0        0 eth1
+0.0.0.0         172.16.1.1      0.0.0.0         UG    0      0        0 eth1
+```
+**www**
+només te la **eth1** configurada, i pot arribar a les xarxes 172.16.1.0 i a la default 0.0.0.0 a través de 172.16.1.1 mitjançant aquesta interfície.
+
+
+```
+Rint:~# ifconfig
+eth1      Link encap:Ethernet  HWaddr fe:fd:00:00:06:01
+          inet addr:172.16.1.3  Bcast:172.16.1.255  Mask:255.255.255.0
+          inet6 addr: fe80::fcfd:ff:fe00:601/64 Scope:Link
+          UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+          RX packets:8 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:3 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:468 (468.0 B)  TX bytes:338 (338.0 B)
+          Interrupt:5
+
+eth2      Link encap:Ethernet  HWaddr fe:fd:00:00:06:02
+          inet addr:192.168.1.1  Bcast:192.168.1.255  Mask:255.255.255.0
+          inet6 addr: fe80::fcfd:ff:fe00:602/64 Scope:Link
+          UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+          RX packets:10 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:3 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:608 (608.0 B)  TX bytes:338 (338.0 B)
+          Interrupt:5
+
+lo        Link encap:Local Loopback
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:16436  Metric:1
+          RX packets:10 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:10 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0
+          RX bytes:660 (660.0 B)  TX bytes:660 (660.0 B)
 
----
+Rint:~# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.1.0     0.0.0.0         255.255.255.0   U     0      0        0 eth2
+172.16.1.0      0.0.0.0         255.255.255.0   U     0      0        0 eth1
+0.0.0.0         172.16.1.1      0.0.0.0         UG    0      0        0 eth1
+```
+**Rint**
+Rint també té dues interfícies configurades, eth1 a la IP 172.16.1.3 i eth2 a 192.168.1.1
+Aquest pot arribar a les xarxes 192.168.1.0/24 i 172.16.1.0 per defecte, i a la resta a través de 172.16.1.1 (eth1).
 
-# Firewalls
-## Introducció
+```
+host1:~# ifconfig
+eth1      Link encap:Ethernet  HWaddr fe:fd:00:00:07:01
+          inet addr:192.168.1.7  Bcast:192.168.1.255  Mask:255.255.255.0
+          inet6 addr: fe80::fcfd:ff:fe00:701/64 Scope:Link
+          UP BROADCAST RUNNING PROMISC MULTICAST  MTU:1500  Metric:1
+          RX packets:3 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:6 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000
+          RX bytes:228 (228.0 B)  TX bytes:468 (468.0 B)
+          Interrupt:5
 
-**Què és un Firewall?**<br><br>
-Els routers distribueixen el tràfic  segons un conjunt de normes que simplement apunten a l'adreça de destí.<br>
-Però i sí necessitem que el tràfic estigui controlat segons uns altres paràmetres?<br>
-Exemples:
-- Equipament a la xarxa externa només pot accedir el servidor web públic.
-- El departament de Marketing pot accedir al server privat però no al públic.
-- El tràfic d'un dispositiu en concret pot accedir a la xarxa de marketing.
+lo        Link encap:Local Loopback
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:16436  Metric:1
+          RX packets:10 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:10 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0
+          RX bytes:660 (660.0 B)  TX bytes:660 (660.0 B)
 
-Una primera solució proposada a aquest problema seria restringir el tràfic produit per cada un dels dispositius.
-- Extramadement difícil de fer actualitzacions
-- No és escalable
-- De vegades no és ni possible
+host1:~# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.1.0     0.0.0.0         255.255.255.0   U     0      0        0 eth1
+0.0.0.0         192.168.1.1     0.0.0.0         UG    0      0        0 eth1
+```
+**host1**
+host1 té només eth1 configurada amb l'@IP 192.168.1.7
 
-Per tant un **firewall** el podem entendre com un **controlador d'accés o PEATGE**, el qual ens divideix la xarxa en 2:
-- Internal Network (Podria ser la xarxa interna d'una empresa) --> Considerada "segura i fiable"
-- External Network (Internet) --> Considerada "insegura"
+**Configure las tablas de filtrado de la máquina host1 de manera que no se permita ningún tipo de tráfico ICMP entrante a los procesos internos (locales) de dicha máquina.**
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/firewall.png"/>
+Per eliminar el traffic ICMP, afegim el següent comando a host1:
+`host1# iptables -t filter -A INPUT -d 192.168.1.7 -p icmp -j DROP`
 
-## Objectius dels Firewalls
+**(a) Si desde Rint se ejecuta un ping con destino host1 ¿se transmitirá el correspondiente mensaje ICMP echo-request por la red? ¿Es posible capturar el mensaje de respuesta ICMP echo-reply? Describa lo que ocurre en este caso.**
 
-- **Punt d'estrangulament únic per el tràfic de xarxa.** Tot el tràfic tant entri o surti ha de passar pel firewall.
-  - Escala degudament, i minimitza el risc de nous perills.
+Posem wireshark a capturar a SimNet2 i fem un `ping -c 1 192.168.1.7`, i veiem com ens indica que NO ha arribat.
+![ping rint host1 not founf](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/../../../../../../../Pictures/escenari.png)
 
-- **Normes de control d'accés**. Només el tràfic autoritzat està permès a passar el firewall.
-  - Facilitat l'administració.
+**(b) Si en lugar de enviar el ping desde Rint hacia host1, lo hacemos en sentido contrario (ping desde host1 hacia Rint) ¿se transmitirá el correspondiente mensaje ICMP echo-request? ¿y el echo-reply? Describa lo que ocurre en este caso.**
 
-- **Seguretat al dispositiu**. El firewall en sí mateix s'assumeix que és immune a penetracions, ha de ser especialment segur.
+![ping host1 rint](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/../../../../../../../Pictures/escenari.png)
 
-## Packet Filtering Firewalls
+Veiem com ara si que es transmet el echo reply a través de la xarxa, però tot i així des de terminal ens indica que el packet no ha arribat a host1 ja que aquest té el trafic icmp filtrat.
 
-Els **Packet Filters** inspeccionen paquets IP que arriben al firewall i apliquen un conjunt de normes per determinar si són acceptats o descartats.
-- **ACCEPT/FORWARD**. El paquet s'accepta.
-- **REJECT** El paquet és descartat i l'origen del paquet és informat a través d'un ICMP.
-- **DROP**. El paquet és descartat silenciosament.
+**2. Borre la configuración de filtrado anterior de host1 y vuelva a configurar sus tablas de filtrado para obtener el siguiente comportamiento:**
+Primer eliminem la norma anterior: `iptables -t filter -D INPUT -d 192.168.1.7 -p icmp -j DROP`
+Si ara provem un ping, aquest cop es transmet perfectament el ping amb els seus dos missatges corresponents capturats a la xarxa.
 
-Les normes de filtreig estan basades en **informació** que es troba al mateix paquet de xarxa:
-- L'adreça dorigen i de destí del paquet.
-- Les adreces origen i destí del transport (per exemple els ports UDP/TCP)
-- El protocol de la xarxa superior (UDP, TCP, etc)
-- L'interfície de xarxa entrant i sortint.
+**(a) Desde host1 se debe poder realizar correctamente un ping a una máquina remota (Rint).**
+**(b) host1 no debe responder a ninguna petición de ping externa.**
+`host1# iptables -t filter -A INPUT -d 192.168.1.7 -p icmp --icmp-type echo-request -j DROP`
+ D'aquesta manera afegim la norma que els missatges de tipus echo-request no arribin a host1.
 
-<h3>Avantatges dels Packet Filtering Firewalls</h3>
+**3. El problema de los esquemas de filtrado anteriores es que hay que configurar las tablas de filtrado en cada una de las máquinas, haciendo que la administración de la red sea compleja. La solución más utilizada es “confiar” la seguridad al router de la red, ya que todas las comunicaciones con el exterior fluyen a través de él y se puede aplicar un control centralizado a las mismas facilitando la administración. Cuando un router realiza funciones de filtrado o firewall se le conoce con el nombre de bastión de la red.**
+**En este punto, usted tiene que configurar el router Rint como bastión para protejer a los hosts internos (host1). Para ello prepare el escenario realizando las siguientes tareas:**
 
-- Simplicitat
-- Evaluació ràpida
-- No canvia el flow del tràfic o les seves característiques.
+- **Elimine las entradas de las tablas de filtrado de host1.**
+- **Verifique que las redes Net1 y Net2 están correctamente configuradas (direcciones IP y tablas de encaminamiento) de forma que exista conectividad entre ellas a nivel IP.**
 
-<h3>Desavantatges</h3>
+**En este momento, debe ser posible realizar con éxito un ping desde www o Rbcn a cualquiera de las máquinas de la Net2 y viceversa.**
 
-- Auditoria d'informació limitada
-- Vulnerable a alguns atacs (relativament simples)
-  - Atacs de *Network Spoofing* (suplantació de xarxa)
-  - *Source Routing Attacks* (Eludeixen les normes d'enrutament)
+Si ho comprovem enviant-nos pings entre elles arriben bé, podem comprovar la configuració a l'exercici 1.
 
-## Stateful Filtering Firewalls
+**Ahora, añada las entradas necesarias en su bastión (Rint) para obtener el siguiente comportamiento:**
 
-També anomenats **Dynamic Packet Filtering**. Tenen en compte el context, i mantenen un historial de packets vistos anteriorment per prendre millors decisions futures.
-- Fan un seguiment de les connexions obertes actuals.
-- Mantenen una taula amb aquestes connexions.
-- Associen les requests de noves connexions a connexions actuals legítimes.
+**(a) Un ping realizado desde una máquina externa a Net2 hacia una máquina perteneciente a Net2 no debe ser respondido, pero en el caso contrario, es decir un ping iniciado desde una máquina de Net2 hacia una máquina externa, sí que debe funcionar correctamente. Verifique el funcionamiento de este filtro.**
 
-Un **stateful firewall** pot mantenir diversos atributs de les conexions que està guardant, com:
-- Adreces IP
-- Ports
-- Números de seqüència
-- Estat de la connexió
 
-<h3>Avantatges</h3>
+**(b) Si una máquina de una red externa a Net2, realiza un intento de conexión a un servicio TCP de un servidor alojado en Net2, este intento de conexión debe ser rechazado, pero en el caso contrario sí que debe funcionar correctamente. Verifique el funcionamiento de este filtro utilizando las máquinas de Net1 como red externa de pruebas.**
 
-- Més segurs que els primers
-  - Tenen mecanismes de defensa per atacs de *spoofing* i *DoS*.
-  - Prevenen atacs de número de seqüència TCP.
+`rint# iptables -A FORWARD -d 192.168.1.0/24 -p tcp --tcp-flags ALL SYN -j DROP`
 
-<h3>Desavantatges</h3>
+Ara intentem iniciar una sessió telnet desde www fins a host1 `www# telnet 192.168.1.7`
 
-- Les normes són més difícils d'escriure
-- Continuen tinguent accés limitat a l'auditoría d'informació
+I veiem com NO es pot connectar, i només veiem els paquets a la NET1, a la NET2 no arriba cap packet tcp.
 
+En canvi, si obrim la connexió telnet desde host1 cap a www SI que es pot connectar, i veiem els paquets a les dues xarxes.
 
-## Proxy Firewalls
+**(c) Finalmente, filtre todo el tráfico UDP que entre o salga de Net2, excepto el tráfico UDP que vaya dirigido a un servidor DNS (que se supone externo a Net2)**
 
-Els anomenats **Application Layer Gateway (ALG)**, Application Layer Firewall o Application Proxy, són **dispositius** que actuen com un relé per tràfic a nivell d'aplicació. 
-<br><br>
-Els ALG poden "entendre" alguns protocols d'aplicació. Són capaços de detectar:
+Volem filtrar tot el tràfic UDP excepte el dirigit a DNS. Sabem que DNS utilitza el port 53, per tant bloquejarem tot el tràfic udp entrant o sortint, excepte el que passi pel port 53.
 
-- Si un protocol NO desitjat està intentant eludir el firewall en un port en concret.
-- Si un protocol s'està utilitzant de manera perjudicial.
-- Si les credencials dels usuaris són suficients per poder utilitzar algún port.
+Hem d'afegir 3 normes, una per descartar tràfic UDP, l'altre per acceptar el tràfic entrant a DNS i l'altre per acceptar el tràfic sortint de DNS:
 
-*Per exemple, un ALG amb suport de HTTP és capaç de bloquejar la descàrrega d'una pàgina web en un lloc, mentres permet la descàrrega d'altres pàgines web en el mateix lloc.*
+`rint# iptables -A FORWARD -p udp --sport 53 -d 192.168.1.0/24 -j ACCEPT` --> "tots els paquets udp que el router Rint hagi de fer un FORWARD, amb port d'origen 53, i destí la xarxa Net2 seran acceptats"
+`rint# iptables -A FORWARD -p udp --dport 53 -s 192.168.1.0/24 -j ACCEPT` --> "tots els paquets udp que el router Rint hagi de fer un FORWARD, amb origen la xarxa Net2, i destí un port 53 seran acceptats"
+`rint# iptables -A FORWARD -p udp -j DROP` --> "tots els paquets udp que el router Rint hagi de fer FORWARD seran descartats"
 
-<h3>Avantatges</h3>
+*IMPORTANT: les normes afegides amb `iptable` es llegeixen en ordre, per tant si un paquet cumpleix la primera ja no passarà a les següents. *
 
-- Protocol més segur.
-- Capacitats d'auditoria d'informació plenes.
-- Amaga l'esquema intern d'adreces.
-- Les aplicacions perjudicials es poden bloquejar.
+Per comprovar-ho fem `dig 192.168.1.7`desde www per veure si el tràfic dns passa, i un `host1# nc -l -u` i `www# nc -u 192.168.1.7` per veure si ens podem connectar mitjançant netcat amb udp.
 
-<h3>Desavantatges</h3>
 
-- Requereix de molts més recursos, i normalment són més lents
-- Requereix un coneixement complex del protocol
-- No està disponible per a tots els protocols d'aplicació
-- Els protocols d'aplicació es tendeixen a actualitzar més freqüentment que els de transport.
-- Pot requerir configuració extra del client
+### Exercici 2
 
+tornem a iniciar la simulació i executem els següents comandos:
+```
+simctl fwnat start
+simctl fwnat exec ifcfg
+simctl fwnat exec routecfg
+simctl fwnat exec fwcfg
+```
 
-## Next Generation Firewalls
-Aquests firewalls combinen diversos tipus de firewalls, com per exemple: *packet inspection, stateful inspection, application proxies, etc.*
+**1. Desde el host www de Net1, realice un ping a 10.0.4.2 (test) ¿funciona? ¿Es un problema de filtrado o de direccionamiento?**
 
-<br>
+No arriba. Comprovem la taula de rutes de www i veiem que el pas previ a enviar el paquet és la direcció IP 172.16.1.1, la qual correspon a la interfície eth1 del router "exterior" Rbcn. Comprovem la taula de rutes d'aquest router, i veiem que té diverses entrades, però la que hauria d'utilitzar per anar fins a **10.0.4.2** és l'entrada default, la qual diu que el gateway és el 10.0.2.1. Tot i tenir la ruta indicada, no arribem a test, ja que és una adreça pública, i nosaltres ho estem enviant des d'una adreça privada, per tant hem de afegir una regla de filtrat NAT perquè sàpiga com traduir les direccions per a encaminar bé el paquet entre xarxes públiques i privades.
 
-Introdueixen el concepte de **Deep Packet Inspection**:
-- Els firewalls tradicionals només inspeccionen els HEADERS.
-- La *Deep Packet Inspection* inspecciona els HEADERS i la DATA que el paquet porta
-  - Poden detectar protocols/aplicacions ofuscades
-  - Poden detectar documents HTML perjudicials
-  - ...
+**2. Para solucionar el problema anterior configure el router externo Rbcn para que realice SNAT para sus redes internas. Una vez configurado pruebe a realizar el ping a 10.0.4.2 ¿funciona ahora? Utilice las herramientas de análisis de tráfico que conoce para ver que está sucediendo en la red.**
 
----
+A Rbcn afegim el següent:
+`Rbcn# iptables -t nat -A POSTROUTING -o eth2 -j SNAT --to 10.0.2.2`
 
-# NAT
-## Raons per utilitzar NAT
-<h3>Problema</h3>
+El qual indica a Rbcn que després de fer la decisió d'enrutament del paquet, tradueixi la direcció d'origen de la interfície eth2 a 10.0.2.2 i així el paquet sàpiga retornar.
 
-- L'adreçament IP públic és limitat (actualment s'ha exhaurit) i és molt car
+![ping www test](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/../../../../../../../Pictures/escenari.png)
 
-<h3>Solució</h3>
+Veiem com ara si que arriba bé el ping i també retorna correctament.
 
-- Utilitzar **adreçament IP privat** en **xarxes internes**
-- Blocs d'adreces disponibles:
-  - Classe A: 10.0.0.0/8
-  - Classe B: 172.16.0.0/16
-  - Classe C: 192.168.0.0/24
-- El problema que té aquesta solució és que les **adreces privades NO es poden utilitzar en xarxes públiques** (INTERNET)
+**3. La figura muestra el típico esquema de firewall con doble bastión (bastion externo –Rbcn– y bastión interno –Rint–), zona desmilitarizada (Net1) o DMZ (DeMilitarized Zone) para los servidores con acceso externo, y red interna (Net2). En este esquema las máquinas de la red interna pueden establecer conexiones a los servidores de la DMZ y a servidores externos (Internet), tal y como se ha configurado en el ejercicio anterior. En este esquema de doble bastión, se debe poder acceder a los servidores de la DMZ desde el exterior pero no a los hosts de la red interna.**
+**Configure el bastión externo (Rbcn) para dar acceso al servidor web de www desde Internet y haga uso de la máquina externa (test) para verificar la configuración. Utilice las herramientas de análisis de tráfico que conoce para ver que está sucediendo en la red.**
 
+Per donar accés al servidor web www desde Internet, configurem Rbcn amb la següent norma
+`Rbcn# iptables -t nat -A PREROUTING -i eth2 -d 10.0.2.2 -j DNAT --to 172.16.1.2`
 
-## Intro
-NAT és un mecanisme de traducció d'adreces IP (i números de port), el qual permet connectar xarxes públiques i privades, de manera que s'estalvien adreces IP públiques.
-<br>
-El NAT suporta TCP, UDP i ICMP.
-<br><br>
+Això fa que el router Rbcn, abans de prendre una decisió d'enrutament amb destí a la interfície interna (-i) eth2, amb adreça IP 10.0.2.2, faci un DNAT i tradueixi l'adreça de destí a la 172.16.1.2, la qual sap arribar al servidor www, i podrà enrutar correctament el paquet.
 
-Quan utilitzem NAT, **es realitzen dues traduccions d'adreces**:
-- Una traducció quan el paquet surt del router NAT
-- Una traducció inversa quan el paquet retorna al router NAT.
-
-
-## Utilització de NAT
-
-<h2>MIRAR VIDEOS</h2>
-
-
-## Tipus de NAT
-
-Tenim **2 tipus principals de NAT**:
-- **Source NAT (SNAT)**:
-  - El router tradueix l'adreça d'origen (Passa d'una IP privada a una IP pública, perquè des de Internet es pugui reconèixer aquella adreça)
-  - La traducció es fa just abans que el paquet surti del router
-  - El mateix router farà l'operació inversa (traducció de l'adreça de destí) just quan els paquets arribin.
-
-- **Destination NAT (DNAT)**:
-  - El router tradueix l'adreça de destí (l'adreça de destí normalment és una xarxa privada, per tant primer envia a la IP pública, llavors la tradueix a la privada corresponent i així el paquet pot arribar)
-  - La traducció es fa abans de l'enrutament, just quan el paquet arriba al router
-  - El router farà l'operació inversa (traducció de l'adreça d'origen) quan els paquets arribin.
-
-## Conseqüències d'utilitzar NAT
-
-Quan les @IP canviem, hem de tenir en compte algunes consideracions:
-- Els **checksums s'han de tornar a calcular** (inclou els checksums de IP, TCP i UDP)
-- Quan s'utilitza NAT, els paquets de resposta haurien de tornar al mateix router.
-- Per aquesta raó, en la majoria de casos només hi ha un router NAT que controla l'accés a Internet.
-
-## Problemes i limitacions de NAT
-
-<h3>Problemes i limitacions (I)</h3>
-
-- Quan utilitzem NAT, l'**Internet esdevé una xarxa pseudo-orientada-a-connexió**.
-- El NAT **acaba amb la transparència de les capes de protocol**
-- El NAT **esdevé un router BOTTLENECK**
-  - Ha de manejar les conexions entrants i sortints, el que provoca problemes de CPU i memòria
-  - El número de IP públiques és limitat, per tant això limita el número de possibles conexions externes
-
-
-<h3>Problemes i limitacions (II)</h3>
-
-- Alguns protocols i aplicacions inclouen les @IP als seus HEADERS i DATA fields.
-- Aquestes @IP han d'estar correctament traduides --> **El router ha d'utilitzar** (a part de NAT) **ALG (Application-Level-Gateway)**
-
-## Exemples
-### FTP + NAT
-
-A l'inici d'una sessió FTP, hi ha un intercanvi de comandos de control, i les **adreces IP** del host **s'inclouen** en aquests comandos.
-
-Aquestes adreces es troben a la data, i s'han de traduir per fer funcionar FTP correctament. *Les adreces estan escrites en ASCII, NO estan codificades en 32 bits*.
-
-L'objectiu és mantenir la longitud de les adreces originals, així el router no ha de canviar els números de seqüència de la connexió.
-
-Si la nova adreça és més curta que la original, s'emplena amb 0's.
-- Per exemple: Si NAT tradueix `206.245.160.2` a `192.168.1.2`, el router soluciona el problema afegint 0's fins que hi ha el mateix número de caràcters. Per tant l'adreça codificada serà: **`192.168.001.2`**.
-
-Si la nova adreça és més llarga que la vella, afegim alguns bits nous.
-- Exemple: traduim `192.168.1.2` a `206.245.160.2` el router ho soluciona afegint 2 bytes extres.
-
-Un cop el router executa alguna d'aquestes accions, ha de canviar els ACK i números de seqüència per continuar mantenint la connexió coherent.
-
-## Conclusions
-
-- NAT ha extès la vida útil de IPv4, allargant el desplegament de IPv6.
-- NAT no és una solució òptima
-- Poden haver-hi diferents comportaments a diferents implementacions de NAT.
-- Les noves aplicaciones i nous protocols necessitaran suportar NAT.
-- Utilitza NAT només si és necessari.
-
-# Firewalls & NAT in Linux
-## Netfilter
-
-Netfilter és el framework de filtrat de paquets utilitzat a Linux.
-- Consisteix en unes *cadenes de normes* per fer el tractament de paquets.
-- Cada cadena està associada a un "rol" diferent del host quan aquest està processant paquets.
-- Els paquets són processats sequencialment travessant les cadenes de normes.
-- Cada paquet de xarxa, arribant o abandonant un dispositiu travessa **com a mínim** una cadena.
-
-
-Existeixen **5 tipus predeterminats de cadenes**:
-- **PREROUTING**: És la primera cadena que un paquet que ve d'una xarxa troba. Es troba abans de la decisió de routing.
-- **INPUT**: Aquesta cadena s'aplica quan un paquet s'ha d'entregar localment (el host és el destí).
-- **FORWARD**: El paquest entrarà a aquesta cadena si ve d'una xarxa, però el host NO és el destí (el host actua com a router)
-- **OUTPUT**: Aquesta cadena s'aplica quan els paquets s'envien des del host (el host és l'origen)
-- **POSTROUTING**: Els paquets entraran a aquesta cadena després que es prengui la decisió d'enrutament.
-
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/netfilter.png"/>
-
-Com a últim comentari, cal destacar que si un paquet arriba al final de la cadena, aquest passarà per **DROP**.
-
-## Netfilter Operational
-
-Quan un paquet entra una cadena, el kernel (de Linux) verifica si les normes d'aquella cadena quadren amb el paquet.
-
-Cada cadena conté un seguit d'especificacions per decidir si els paquets quadren amb aquella cadena. S'aplica un veredicte per determinar si aquella cadena s'ha d'aplicar al paquet.
-
-Possibles veredictes de la cadena poden ser: "accept" o "drop for filtering", "change addresses (and ports) for NAT"...
-
-**Metodologia:**
-- Les normes s'examinen sequencialment.
-- Si la norma NO es pot aplicar al paquet, s'examina la següent norma.
-- Si la norma es pot aplicar, s'executa l'acció indicada al veredicte, i no s'examinen més normes.
-- Si un paquet arriba al final de la cadena sense haver passat per cap norma, s'aplica la política per defecte en aquell paquet (drop).
-
-## Chain & Rule Configuration
-
-Si volem configurar les cadenes de netfilter al kernel de Linux fem servir el comando `iptables` tal que:
-
-- `iptables <table> <op> <chain> <pkt-match-condition> <action>`
-  - `<table>`: Seleccions la taula amb la que treballarem
-    - `-t filter`: selecciona **packet filtering**
-    - `-t nat`: selecciona la taula NAT
-  - `<op>`: Normes d'operacions dins d'una cadena
-    - APPEND: afegeix una nova norma a la cadena (`-A`)
-    - INSERT: insereix una nova norma a una posició dins la cadena (`-I`)
-    - DELETE: eliminar una norma d'una posició dins la cadena (`-D`)
-    - MOVE: mou una norma a una altre posició (`-R`)
-  - `<chain>` El nom de la cadena amb la que volem operar
-    - Packet Fitering: INPUT, OUTPUT, FORWARD
-    - NAT: PREROUTING, POSTROUTING, OUTPUT
-  - `<pkt-match-condition>`: El conjunt de condicions que un paquet ha de cumplir
-    - Physical/Link layer conditions: La interfaç de xarxa on han d'arribar (o transmetre) els paquets.
-    - Network Layer Conditions: Camps al IP Header.
-    - Transport Layer Conditions: Camps al transport Header.
-  - `<action>`: El veredicte s'aplica al paquet si totes les condicions es cumpleixen.
-
-Depenent de les condicions que afegim al comando, haurem d'afegir-ne algunes d'extres per especificar bé la condició que hem escollit.
-
-Per exemple:
-
-- Condicions per la **physical/link layer**: Hem d'indicar la interfície on el paquet s'ha d'enviar o de la que ha de ser transmesa
-  - -i, --in-interface [!] name --> Nom de la interfície per la qual el paquet s'ha rebut (només per paquets entrant a les cadenes INPUT, FORWARD i PREROUTING). *Si afegim l'argument "!", el sentit s'inverteix.*
-  - -o, --out-interface [!] name --> Nom de la interfície per on s'enviarà el paquet (només per paquets que entren a les cadenes FORWARD, OUTPUT i POSTROUTING).
-- Condicions per la **network layer**:
-  - -p, --protocol [!] protocol --> El protocol del paquet que s'ha de comprovar. Pot ser `tcp`, `udp`, `icmp` o `all`.
-  - -s, --source [!] address[/mask] --> Especificació de l'origen.
-  - -d, --destination [!] address[/mask] --> Especificació del destí.
-
-
-### Exemples de iptables
-
-1. Afegir una norma a la cadena de INPUT per fer un DROP de paquets l'origen dels quals és la IP 192.168.1.1, i el protocol  de transport és TCP:
-   `iptables -t filter -A INPUT -s 192.168.1.1 -p tcp -j DROP`
-2. Afegir una norma a FORWARD per fer un DROP de paquets que provinguin del rang d'adreces 192.168.1.0/24, el protocol ICMP, i icmp type echo-request, i rebut a la interfície eth0:
-   `iptables -t filter -A FORWARD -i eth0 -s 192.168.1.0/24 -p ICMP --icmp-type-echo-request -j DROP`
-3. Afegir una norma a OUTPUT per evitar conexions http cap al servidor www.google.com:
-   `iptables -t filter -A OUTPUT -d www.google.com -p tcp --dport 80 --syn -j DROP`
-4. Afegir una norma a SNAT per tots els paquets que abandonen el router utilitzant la interfície eth1, traduint les adreces a 172.16.1.1:
-   `iptables -t nat -A POSTROUTING -o eth1 -j SNAT --to 172.16.1.1`
