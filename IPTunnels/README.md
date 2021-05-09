@@ -178,7 +178,7 @@ Ara enviem un ping desde **host2** a **host3**, i veiem que aquest arriba sense 
 
 Un cop enviat anem a comprovar que estigui ben encapsulat, per fer-ho hauriem de mirar-ho a les xarxes SimNet1 i SimNet2, ja que són les dues que pertanyen al tunnel:
 
-![paquet amb 2 headers SimNet1](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/escenari.png)
+![paquet amb 2 headers SimNet1](https://github.com/akaKush/Internet-Basics/blob/main/IPTunnels/Pictures/Captura%20de%20Pantalla%202021-05-08%20a%20les%2014.58.45.png)
 
 Veiem com tenim 2 headers, el primer que indica com arribar d'una punta a l'altre del tunnel (192.0.2.2 (R1) --> 198.51.100.2 (R2)), i l'altre desde l'origen i fins al destí que hem indicat al ping (192.168.0.2 (host2) --> 172.16.1.3 (host3)).
 
@@ -188,15 +188,15 @@ Si ens fixem en el valor del PROTOCOL, veiem com a la capçalera exterior ens in
 
 **Per comprovar la diferència entre la mida dels paquets, mirem a SimNet0, ja que així trobem el paquet sense estar encapsulat i els podem comparar**:
 
-![mida paquet simnet0](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/escenari.png)
+![mida paquet simnet0](https://github.com/akaKush/Internet-Basics/blob/main/IPTunnels/Pictures/Captura%20de%20Pantalla%202021-05-08%20a%20les%2015.05.26.png)
 
-![mida paquet simnet1](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/escenari.png)
+![mida paquet simnet1](https://github.com/akaKush/Internet-Basics/blob/main/IPTunnels/Pictures/Captura%20de%20Pantalla%202021-05-08%20a%20les%2015.07.40.png)
 
 Veiem com a dins el tunel, el paquet ha augmentat 20bytes, els quals són exactament el tamany de la capçalera IP exterior.
 
 Finalment fixem-nos en que tenim el **Flag Don't Fragment** activat, i ara mirem els diferents TTL que tenim tant al paquet interior com a l'exterior al llarg de les diferents xarxes.
 
-![TTL](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/escenari.png)
+![TTL](https://github.com/akaKush/Internet-Basics/blob/main/IPTunnels/Pictures/Captura%20de%20Pantalla%202021-05-08%20a%20les%2017.58.58.png)
 
 *La capçalera exterior utilitza el TTL de la interior. Durant el tunnel només es decrementa el TTL de la exterior, el de la interior queda congelat.*
 
@@ -205,15 +205,15 @@ Finalment fixem-nos en que tenim el **Flag Don't Fragment** activat, i ara mirem
 
 Analitzant el wireshark veiem que el paquet no passa de la SimNet0, i rebem un missatge TTL exceeded que ens l'envia R1.
 
-![TTL exceeded R1](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/escenari.png)
+![TTL exceeded R1](https://github.com/akaKush/Internet-Basics/blob/main/IPTunnels/Pictures/Captura%20de%20Pantalla%202021-05-08%20a%20les%2016.28.32.png)
 
 Si ara posem TTL=2, el que envia el missatge de TTL exceeded aquest cop és RC (192.0.2.1):
 
-![TTL exceeded RC](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/escenari.png)
+![TTL exceeded RC](https://github.com/akaKush/Internet-Basics/blob/main/IPTunnels/Pictures/Captura%20de%20Pantalla%202021-05-08%20a%20les%2016.28.41.png)
 
 Si finalment fem el mateix test amb TTL=3, aquest arriba al destí i rebem echo-reply, però és interessant veure els diferents TTL que trobem:
 
-![TTL SimNet2](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/escenari.png)
+![TTL SimNet2](https://github.com/akaKush/Internet-Basics/blob/main/IPTunnels/Pictures/Captura%20de%20Pantalla%202021-05-08%20a%20les%2016.30.47.png)
 
 Veiem com tenim per el outer header un TTL de 2 salts, el qual fa el primer entre R1 i RC, i el segon entre RC i R2.
 
