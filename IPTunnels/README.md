@@ -105,7 +105,7 @@ En els exercicis següents veurem els problemes típics del IPIP Tunneling:
 
 ## Pràctica
 
-![escenari](https://github.com/akaKush/Internet-Basics/blob/main/Firewalls%26NAT/Pictures/escenari.png)
+![escenari](https://github.com/akaKush/Internet-Basics/blob/main/IPTunnels/Pictures/escenari.png)
 
 Treballarem sobre l'anterior escenari, on tindrem una connexió d'una xarxa IP remota i privada, la qual utilitza una xarxa pública intermediaria per connectar-se amb una altre xarxa privada.
 
