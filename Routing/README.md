@@ -1,5 +1,5 @@
-# Routing
-- [Routing](#routing)
+# Teoria
+- [Teoria](#teoria)
   - [SPA](#spa)
     - [Bellman-ford](#bellman-ford)
     - [Distributed BF Version](#distributed-bf-version)
@@ -15,14 +15,7 @@
       - [RIPng](#ripng)
     - [RIP Limitations](#rip-limitations)
   - [Linux/Quagga](#linuxquagga)
-    - [Comandos](#comandos)
-  - [OSPF](#ospf)
-    - [Intro](#intro)
-    - [Broadcast Segments](#broadcast-segments)
-    - [States and Packets](#states-and-packets)
-      - [DOWN](#down)
-      - [INIT](#init)
-      - [2-WAY](#2-way)
+- [Pràctica](#pràctica)
 
 En aquest document escriure insights de tot el que crec important a saber sobre els diferents temes que componen Routing.
 
@@ -213,121 +206,234 @@ Però això a la FIB no passarà, ja que per escullir quina de les dues rutes é
 
 <img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png" height=50% width=50%/>
 
-### Comandos
 
 (Per millor comprensió dels comandos consultar la pràctica)
 Per obrir una consola de Quagga:
 - `vtysh`
 
 
-
-
-
-
-
-
-
-
-
-
 ---
-## OSPF
 
-### Intro
+# Pràctica
 
-OSPF (**Open Shortest Path First**) és un protocol de routing dinàmic que igual que RIP té en compte quines rutes estan disponinbles i quines no, i va actualitzant la seva bbdd segons aquesta info.
+L'objectiu de la pràctica és entendre el **RIP-1** amb el següent escenari:
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
 
-La diferència entre RIP i OSPF és que RIP suposa que cada pes dels enllaços és de 1, i en canvi OSPF té en compte la **velocitat dels enllaços**, i **com estan connectades les xarxes** entre elles.
+Les interfícies estan configurades amb les IPs corresponents al hostID de cada màquina. Per exemple, la interfície **eth1 de r222** és **192.168.3.222**.
 
-Cada **Router OSPF** guarda les següents **taules**:
-- **Neighbour table** amb els routers connectats directament.
-- **Topology table**, la qual guarda un mapa de la xarxa (és una bbdd composta per els **estats dels links**).
-- **Routing table**, és la RIB, guarda els **shortest paths** i el protocol que utilitza per trobarlos és el de **Dijkstra**.
+Per tant tenim les següents IPs a cada host:
 
-El temps de convergència és millor que en RIP perquè si l'estat d'un link canvia, aquest canvi s'exten ràpidament per tota la xarxa.
+- **h223**
+  - eth1 --> 192.168.0.223
+- **r222**
+  - eth1 --> 192.168.3.222
+  - eth2 --> 192.168.5.222
+  - eth3 --> 192.168.0.222(/25)
+- **r1**
+  - eth1 --> 172.16.0.1 (/16)
+  - eth2 --> 192.168.2.1
+  - eth3 --> 192.168.3.1
+  - eth4 --> 192.168.4.1
+- **h11**
+  - eth1 --> 192.168.4.11
+- **r3**
+  - eth1 --> 192.168.5.3
+  - eth2 --> 192.168.2.3
+  - eth3 --> 192.168.1.3
+  - eth4 --> 192.168.0.3
+- **h33**
+  - eth1 --> 192.168.0.33
+- **r4**
+  - eth1 --> 192.168.1.4
+  - eth2 --> 172.16.0.4 (/16)
+- **r5**
+  - eth1 --> 172.16.0.5 (/16)
 
-Els routers OSPF poden separar els dominis en diferents **àrees**.
-Tots els **routers de dins de cada àrea** saben tota la **topologia** d'aquella àrea, i les altres només **reben vectors de distàncies**.
+Comencem la simulació amb `simctl rip start` i executem `simctl rip exec initial` per la config basica mencionada a dalt.
 
-Normalment el disseny de les Àrees OSPF és tal que:
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/arees.png" height=50% width=50%/>
+1. Execute a ping from router r3 to 192.168.2.1, 192.168.3.1 and 192.168.4.11. Discuss the results.
 
-On tenim una **area central**, o **area 0** per on passarà gairebé **tota la informació** que vulguem enviar d'un lloc a l'altre. Seria com un hub que distribueix la informació que li arriba. 
-Totes les altres àrees han d'estar connectades a la 0.
+```
+root@r3:~# ping -c 1 192.168.2.1                         
+PING 192.168.2.1 (192.168.2.1) 56(84) bytes of data.
+64 bytes from 192.168.2.1: icmp_req=1 ttl=64 time=0.276 ms
 
-**Àrea 1** i **Àrea 2**, i totes les àrees que estiguin connectades amb la Backbone, enviaran els seus **vectors de distàncies** a la àrea 0, a través dels seus **ABR**.
+--- 192.168.2.1 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.276/0.276/0.276/0.000 ms
 
-A més a més, els ABR poden agregar rutes, de manera que es minimitzi el trafic que s'intercanvia entre àrees, i el número d'entrades a la taula de rutes.
-*Per exemple: El ABR d'una àrea que tingui les xarxes **10.0.0.0/24** i **10.0.1.0/24** pot agregar-les entre elles i fer una sola ruta **10.0.0.0/23***.
+root@r3:~# ping -c 1 192.168.3.1             
+connect: Network is unreachable
 
-Cada cop que es produeix un canvi en la topologia, s'actualitzen les taules de rutes per poder fer la xarxa estable.
+root@r3:~# ping -c 1 192.168.4.11
+connect: Network is unreachable
+```
 
-**AS i ASBRs**
+El primer ping arriba correctament però els altres dos no. A wireshark veiem com només tenim els paquets corresponents al primer ping, ja que aquest s'envia a un host que pertany a la mateixa xarxa a la qual pertany r3 (estan connectats directament).
 
-- **Autonomous System:** El conjunt de xarxes IP sota el control d'un o varios operadors de xarxa que presenten una política de rutes comuna i clarament definida s'anomenen Autonomous Systems.
+Els dos darrers pings no arriben perquè r3 no sap per on enviar els paquets corresponents a aquelles xarxes, només té entrades a la seva taula de rutes per arribar a les xarxes amb les que està directament connectat:
+```
+root@r3:~# route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+192.168.0.0     0.0.0.0         255.255.255.0   U     0      0        0 eth4
+192.168.1.0     0.0.0.0         255.255.255.0   U     0      0        0 eth3
+192.168.2.0     0.0.0.0         255.255.255.0   U     0      0        0 eth2
+192.168.5.0     0.0.0.0         255.255.255.0   U     0      0        0 eth1
+```
 
-- **Autonomous System Border Routers**: Redistribueixen xarxes externes a OSPF (static, kernel, RIP, etc.), i poden agregar rutes però només si són externes.
+2. Start a capture on SimNet2. In r3, open the Quagga command tool and add the networks 192.168.1.0/24 and 192.168.2.0/24 to RIP:
+```
+root@r3:~# vtysh
+r3# configure terminal
+r3(config)# router rip
+r3(config-router)# version 1 r3(config-router)# network 192.168.1.0/24 r3(config-router)# network 192.168.2.0/24
+```
+Explain the RIP response messages that you observe in SimNet2. In your explanation include the MAC addresses (L2), IP addresses (L3), ports (L4) and the RIP information.
 
-### Broadcast Segments
-- Els routers OSPF intercanvien peces d'info de la topologia als **LSAs (Link State Advertisements)**.
-- Cada LSA té un **número de serie**.
-- Si un router **rep un nou LSA**, aquest **actualitza la seva bbdd dels estats dels links ==> LSDB**
-- Els routers **envien** els nous **LSA als seus veins**, per **sincronitzar totes les LSDB**.
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
 
-Tot i així, per **evitar un excés de LSAs**, OSPF utilitza **Routers Designats** (DR), i **Backup Designated Routers** (DBR) i s'envien els LSAs que s'han d'actualitzar a través de multicast a l'adreça **224.0.0.6** --> (AllDRouters) (en comptes de bcast).
-Llavors quan un DR vol contestar amb la LSA a la resta dels veins, utilitza l'adreça **224.0.0.5** --> (AllSPFRouters).
+Veiem com només tenim request i response de la xarxa 192.168.2.0, els quals utilitzen RIPv1.
+Les adreces de L2 són desde fe:fd:00:00:03:02 (r3) fins a ff:ff:ff:ff:ff:ff (broadcast).
+Les adreces de L3 són desde 192.168.2.3 (r3) fins a 192.168.2.255 (broadcast).
+Els ports utilitzats en L4 són el UDP 520 tant de source com destination.
 
-És a dir:
-*Quan un router actualitza la seva LSDB, envia un LSA a tots els DR, perquè així aquests l'enviin a tots els altres veins de la xarxa. D'aquesta manera s'evita flooding de LSAs*.
+3. Capture on SimNet2 and type the following RIP command in r3:
+   `r3(config-router)# neighbor 192.168.2.1`
+  Describe what the command does and explain why you receive an error message (ICMP) from 192.168.2.1. To finish this exercise disable the neighbor with:
+  `r3(config-router)# no neighbor 192.168.2.1`
 
-Amb el comando `show ip ospf neighbor` veiem els rols dels veins per comprovar quins són els DR i quins no.
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
 
-**Com triem el DR i el BDR?**
+Veiem com rebem missatges ICMP d'error que ens indiquen "PORT UNREACHABLE".
+Si ens fixem en les característiques del missatge, veiem les adreces d'origen i destí, sent 192.168.2.1 (r1) el que envia el missatge d'error cap a r3, indicant que no pot accedir al port.
 
-- Comparem els **Priority ID (Hello packet)** i escollim com a DR el que el tingui més alt.
-- Per defecte totes les interfícies tenen **priority ID = 1**.
-- Si tots els routers tenen PriorityID=1, llavors comparem **router-id**, el qual també es troba als Hello Packets.
-- També escollirem com a DR el router amb router-id més alt.
+4. Capture in SimNet2 and then, in r3, set eth3 down: 
+`root@r3:~# ifconfig eth3 down`
+Describe the RIP response messages captured waiting at least for 2 minutes.
 
-### States and Packets
+Sortim de quagga mitjançant `exit` i executem el comando indicat. Veiem els següents missatges al cap d'un parell de minuts:
 
-**OSPF NO UTILITZA CAP CAPA DE TRANSPORT (UPD/TCP)**.
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
 
-- Encapsula els datagrames IP directament.
-- Té les seves pròpies funcions de **detecció/correcció d'errors**, amb els seus estats i format de paquets:
-  - **Les màquines OSPF tenen 6 estats**:
-    - DOWN
-    - INIT
-    - 2-WAY
-    - EXSTART
-    - LOADING
-    - FULL
-  - **OSPF utilitza 5 tipus de paquets**:
-    - Hello
-    - Database Description (DD)
-    - Link State Request (LSR)
-    - Link State Update (LSU)
-    - Link State Acknowledgement (LSACK)
-- En qualsevol moment, cada router OSPF estarà en algun dels estats amb cada un dels seus veins.
+Només tenim RIP responses, enviades desde r3 cap a broadcast periòdicament.
 
-Quan afegim una xarxa a OSPF, es comencen a enviar packets "Hello" i el router es posa en l'estat `DOWN`.
-#### DOWN
-Els **Hello** packets s'envien cada 10 segons i contenen:
-- router-id
-- hello and dead timers
-- màscara de red
-- area-id
-- authentication info
-- Llista de active neighbors (router-ids)
-- Router Priority
-- DR i BDR (link interface addresses)
+5. In r3, set eth3 up. Describe and explain the RIP response messages that you capture on SimNet2 at least during 30 seconds.
 
-Quan un router **rep un hello packet** passa a estar al **`INIT` state**.
-#### INIT
-En aquest estat, quan un router rep un Hello packet d'un dels seus veins, apunta el ruoter-id de l'emissor al seu **hello packet**. D'aquesta manera fem un reconeixement de que els dos routers estan connectats.
+També veig només RIPv1 responses...
 
-Quan el router emissor rep un Hello Packet vàlid d'un dels seus veins, amb el seu router-id inclòs, passa al **`2-WAY` state**
-#### 2-WAY
-Aquest estat defineix la comunicació bidireccional establerta entre els 2 routers.
+6. In r3, remove the network 192.168.1.0/24 from RIP.
+Describe the RIP response messages that you observe in SimNet2. Wait at least for 2 minutes to end the capture.
+Finally, in r3, remove also the network 192.168.2.0/24 from RIP.
 
-En aquest estat **triem els DR/BDR**.
+Veiem missatges IGMP Multicast per unir-nos al grup 224.0.0.9, i seguidament RIP responses.
+
+Si ara deixem la xarxa 192.168.2.0/24 (`no network 192.168.2.0/24`) veiem 2 missatges IGMP per abandonar el mateix grup d'abans, i **cap missatge RIP més**.
+
+7. *initial* Capture in all the networks to which r1 is connected and, in this router, type the following RIP command: `r1(config-router)# network 192.168.0.0/16`
+In which networks do yo see a RIP response packet? Why?
+Describe the RIP messages including L2 MAC addresses, L3 IP addresses, L4 ports and the RIP information.
+
+Veiem response paquets a totes les xarxes menys la SN6, ja que aquesta correspon a la xarxa 172.16.0.0/16, i per tant no entra dins el rang anterior.
+
+Els missatges capturats a les altres xarxes són així:
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+
+Veiem la info típica dels missatges RIP, enviats desde r1 cap a broadcast, tant en L2 com L3, i utilitzant els ports 520 de destí i origen.
+
+
+8. Do you think that it makes sense to send RIP response messages through the 192.168.4.0/24 network? For example, it makes sense to send RIP response messages to h11?
+
+No, en realitat cap a la xarxa SN4 no faria falta enviar missatges RIP, ja que no hi ha cap dispositiu que funcioni com a router, i per tant crec que allà no faria falta enviar tràfic RIP.
+
+9. Capture on SimNet2 and type the following command in r1: `r1(config-router)# no network 192.168.0.0/16`
+Wait for a few seconds, do yo see any RIP message? why?
+Then, in r1, in less than 2 minutes, activate RIP for the networks 192.168.2.0/24 and 192.168.3.0/24. Explain the RIP messages captured on SimNet2.
+
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+
+Al principi en el moment d'abandonar la xarxa 192.168.0.0/16, veiem simplement dos missatges d'abandonar el grup 224.0.0.9, i ja cap missatge més RIP. Això és perquè abandonem el grup multicast per on enviem la info de RIP.
+
+Seguidament activem les altres dues xarxes, i veiem els missatges RIP request i response corresponents, així com els IGMP per unir-se l grup multicast.
+
+
+10. Capture on SimNet2 and SimNet3. In r3, start RIPv1 for the network 192.168.5.0/24.
+Do you observe RIP messages on SimNet2 from r3? why?
+Now, in r3, start RIPv1 for the network 192.168.2.0/24.
+For the captured traffic, explain the networks that you observe in the RIP response messages. In addition, explain if triggered updates, split horizon and poison reverse are activated in r1 and how can you know this.
+
+Després d'executar `network 192.168.5.0/24` a r3, ens retorna el següent missatge per terminal:
+`Warning: closing connection to ripd because of an I/O error!`
+
+I a SN2 no veiem cap missatge corresponent a r3.
+
+Ara activem `network 192.168.2.0/24` ...
+
+
+11. To set this configuration you can use the labels of simctl `initial` and then `ripv1-a`. 
+Try a ping from r3 to 192.168.3.1.
+Does it work? why?
+Try a ping from r3 to 192.168.4.11. Does it work? why?
+
+Explain the RIB and FIB of the router r3.
+• The RIB entries for RIP can be shown entering in Quagga and typing:
+     `router# show ip rip`
+• The FIB/RIB entries for all the protocols can be shown in Quagga with the command:
+     `router# show ip route`
+You can also see the FIB on a linux command-line typing:
+`root@r3:~# route -n`
+
+Analitzem la configuració `ripv1-a`, i les taules RIB i FIB.
+
+A la **taula RIB corresponent només al mecanisme RIP** veiem el següent: (`r3# show ip rip`)
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+
+Podem veure com tenim 2 xarxes directament connectades (.5.0 i .2.0), i que podem accedir a 192.168.3.0/24 a través de 192.168.2.1.
+
+Per veure les **rutes de TOTS els protocols a les taules RIB i FIB** fem `r3# show ip route` i veiem el següent:
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+
+A més de les rutes anteriors, aquí veiem també la interfície de loopback i totes les que faltaven i estan directament connectades.
+
+Finalment si executem desde terminal (fora de quagga) `$ route -n` també veiem les entrades de la taula FIB:
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+
+
+
+12. Capture on SimNet4 and set the interface eth4 in r1 as passive. Then, add the network 192.168.4.0/24 to RIP and try again a ping from r3 to 192.168.4.11.
+Does it work now? why?
+Do you see RIP messages on SimNet4? Why? Explain the RIB and FIB of the router r3.
+
+No ha funcionat el ping. A les taules FIB/RIB de r3, no apareix SN4, tot i haver-la afegit amb `r3(config-router)# network 192.168.4.0/24`.
+
+A r1, al haver activat la interfície eth4 com a passiva, fa que els missatges RIP no es transmetin cap allà.
+
+13. `initial`, `ripv1-b` Capture on SimNet3 and SimNet5.
+In r3, add 192.168.5.0/24 to RIP and also add 192.168.0.0/24 to RIP but as passive.
+In r222, add 192.168.3.0/24 and 192.168.5.0/24 to RIP.
+
+Procés per afegir les xarxes a RIP a r3, i la segona com a passiva:
+```
+r3@root# vtysh
+r3# configure terminal
+r3(config)# router rip
+r3(config-router)# version 1
+r3(config-router)# network 192.168.5.0/24
+r3(config-router)# network 192.168.0.0/24
+r3(config-router)# passive-interface eth4
+```
+
+A r222 fem el mateix però amb les xarxes que ens indica.
+
+14. Another way of including routes to RIP is to use “redistribution”. Redistribute the connected networks of r1 and r222 using the following Quagga command:
+`router(config-router)# redistribute connected`
+
+Describe the entries (if any) of the networks 172.16.0.0/16 and 192.168.0.128/25 present on the RIB of r1 and r222. 
+Observing the RIB of the different routers, explain if you notice any differences between the networks distributed with redistribution and the networks distributed with the network command.
+
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+
+Tenim entrades per la xarxa 172.16.0.0 als dos routers, en el cas del r222 ens indica que hi accedim a través de r1, i a r1 ens diu que la tenim directament connectada.
+
+En el cas de la xarxa 192.168.0.128/25, tenim una entrada a la taula de r222, directament connectades, però a r1 cap.
+Es deu a que tenim entrada per la xarxa 192.168.0.0/24, a través de r3, i dins d'aquest rang inclou totes les adreces de 192.168.0.128/25.
