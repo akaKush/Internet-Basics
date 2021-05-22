@@ -217,7 +217,7 @@ Per obrir una consola de Quagga:
 # Pràctica
 
 L'objectiu de la pràctica és entendre el **RIP-1** amb el següent escenari:
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/Captura%20de%20Pantalla%202021-05-21%20a%20les%2019.12.20.png"/>
 
 Les interfícies estan configurades amb les IPs corresponents al hostID de cada màquina. Per exemple, la interfície **eth1 de r222** és **192.168.3.222**.
 
@@ -291,7 +291,7 @@ r3(config-router)# version 1 r3(config-router)# network 192.168.1.0/24 r3(config
 ```
 Explain the RIP response messages that you observe in SimNet2. In your explanation include the MAC addresses (L2), IP addresses (L3), ports (L4) and the RIP information.
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/Captura%20de%20Pantalla%202021-05-21%20a%20les%2020.15.24.png"/>
 
 Veiem com només tenim request i response de la xarxa 192.168.2.0, els quals utilitzen RIPv1.
 Les adreces de L2 són desde fe:fd:00:00:03:02 (r3) fins a ff:ff:ff:ff:ff:ff (broadcast).
@@ -303,7 +303,7 @@ Els ports utilitzats en L4 són el UDP 520 tant de source com destination.
   Describe what the command does and explain why you receive an error message (ICMP) from 192.168.2.1. To finish this exercise disable the neighbor with:
   `r3(config-router)# no neighbor 192.168.2.1`
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/Captura%20de%20Pantalla%202021-05-21%20a%20les%2020.24.19.png"/>
 
 Veiem com rebem missatges ICMP d'error que ens indiquen "PORT UNREACHABLE".
 Si ens fixem en les característiques del missatge, veiem les adreces d'origen i destí, sent 192.168.2.1 (r1) el que envia el missatge d'error cap a r3, indicant que no pot accedir al port.
@@ -314,7 +314,7 @@ Describe the RIP response messages captured waiting at least for 2 minutes.
 
 Sortim de quagga mitjançant `exit` i executem el comando indicat. Veiem els següents missatges al cap d'un parell de minuts:
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/Captura%20de%20Pantalla%202021-05-22%20a%20les%2011.44.27.png"/>
 
 Només tenim RIP responses, enviades desde r3 cap a broadcast periòdicament.
 
@@ -337,7 +337,7 @@ Describe the RIP messages including L2 MAC addresses, L3 IP addresses, L4 ports 
 Veiem response paquets a totes les xarxes menys la SN6, ja que aquesta correspon a la xarxa 172.16.0.0/16, i per tant no entra dins el rang anterior.
 
 Els missatges capturats a les altres xarxes són així:
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/Captura%20de%20Pantalla%202021-05-22%20a%20les%2012.40.57.png"/>
 
 Veiem la info típica dels missatges RIP, enviats desde r1 cap a broadcast, tant en L2 com L3, i utilitzant els ports 520 de destí i origen.
 
@@ -350,7 +350,7 @@ No, en realitat cap a la xarxa SN4 no faria falta enviar missatges RIP, ja que n
 Wait for a few seconds, do yo see any RIP message? why?
 Then, in r1, in less than 2 minutes, activate RIP for the networks 192.168.2.0/24 and 192.168.3.0/24. Explain the RIP messages captured on SimNet2.
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/Captura%20de%20Pantalla%202021-05-22%20a%20les%2013.01.29.png"/>
 
 Al principi en el moment d'abandonar la xarxa 192.168.0.0/16, veiem simplement dos missatges d'abandonar el grup 224.0.0.9, i ja cap missatge més RIP. Això és perquè abandonem el grup multicast per on enviem la info de RIP.
 
@@ -365,12 +365,10 @@ For the captured traffic, explain the networks that you observe in the RIP respo
 Després d'executar `network 192.168.5.0/24` a r3, ens retorna el següent missatge per terminal:
 `Warning: closing connection to ripd because of an I/O error!`
 
-I a SN2 no veiem cap missatge corresponent a r3.
-
-Ara activem `network 192.168.2.0/24` ...
+... (s'havia reiniciat l'escenari?)
 
 
-11. To set this configuration you can use the labels of simctl `initial` and then `ripv1-a`. 
+1.  To set this configuration you can use the labels of simctl `initial` and then `ripv1-a`. 
 Try a ping from r3 to 192.168.3.1.
 Does it work? why?
 Try a ping from r3 to 192.168.4.11. Does it work? why?
@@ -386,17 +384,17 @@ You can also see the FIB on a linux command-line typing:
 Analitzem la configuració `ripv1-a`, i les taules RIB i FIB.
 
 A la **taula RIB corresponent només al mecanisme RIP** veiem el següent: (`r3# show ip rip`)
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/Captura%20de%20Pantalla%202021-05-22%20a%20les%2013.39.16.png"/>
 
 Podem veure com tenim 2 xarxes directament connectades (.5.0 i .2.0), i que podem accedir a 192.168.3.0/24 a través de 192.168.2.1.
 
 Per veure les **rutes de TOTS els protocols a les taules RIB i FIB** fem `r3# show ip route` i veiem el següent:
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/Captura%20de%20Pantalla%202021-05-22%20a%20les%2013.43.10.png"/>
 
 A més de les rutes anteriors, aquí veiem també la interfície de loopback i totes les que faltaven i estan directament connectades.
 
 Finalment si executem desde terminal (fora de quagga) `$ route -n` també veiem les entrades de la taula FIB:
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/Captura%20de%20Pantalla%202021-05-22%20a%20les%2013.44.17.png"/>
 
 
 
@@ -431,7 +429,7 @@ A r222 fem el mateix però amb les xarxes que ens indica.
 Describe the entries (if any) of the networks 172.16.0.0/16 and 192.168.0.128/25 present on the RIB of r1 and r222. 
 Observing the RIB of the different routers, explain if you notice any differences between the networks distributed with redistribution and the networks distributed with the network command.
 
-<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/admin_dist.png"/>
+<img src="https://github.com/akaKush/Internet-Basics/blob/main/Routing/Pictures/Captura%20de%20Pantalla%202021-05-22%20a%20les%2014.28.50.png"/>
 
 Tenim entrades per la xarxa 172.16.0.0 als dos routers, en el cas del r222 ens indica que hi accedim a través de r1, i a r1 ens diu que la tenim directament connectada.
 
